@@ -11,6 +11,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -301,4 +303,21 @@ public class GuiClient extends Application{
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
+    public void addImageToGridPane(GridPane gridPane, String imagePath, int column, int row) {
+        // Create an image object
+        Image image = new Image(imagePath);
+
+        // Create an ImageView and set the image to it
+        ImageView imageView = new ImageView(image);
+
+        // You might want to adjust the size of the image view to fit the cell
+        imageView.setFitWidth(gridPane.getColumnConstraints().get(column).getPrefWidth());
+        imageView.setFitHeight(gridPane.getRowConstraints().get(row).getPrefHeight());
+        imageView.setPreserveRatio(true);
+
+        // Add the ImageView to the gridpane at the specified column and row
+        gridPane.add(imageView, column, row);
+    }
 }
+
+
