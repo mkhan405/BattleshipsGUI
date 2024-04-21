@@ -10,13 +10,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import org.w3c.dom.Text;
+import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
     private TextField nameTextField;
@@ -94,16 +95,20 @@ public class GuiClient extends Application{
         });
 
 
-        sceneMap = new HashMap<String, Scene>();
-        sceneMap.put("welcome", createWelcomePage());
 
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
         });
 
-        primaryStage.setScene(sceneMap.get("welcome"));
-        primaryStage.setTitle("Battleships");
+
+        sceneMap = new HashMap<String, Scene>();
+        sceneMap.put("welcome", createWelcomePage());
+
+        boatPlace(primaryStage);
+
+//        primaryStage.setScene(sceneMap.get("welcome"));
+//        primaryStage.setTitle("Battleships");
         primaryStage.show();
     }
 
@@ -115,10 +120,11 @@ public class GuiClient extends Application{
         promptLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
 
         Button onlineButton = new Button("Online");
-        onlineButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 125px;");
+        styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
 
         Button botButton = new Button("AI");
-        botButton.setStyle("-fx-background-color: #ffae00; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 125px;");
+        styleButton(botButton, "linear-gradient(#f0bf2b, #d4a004)", "linear-gradient(#f7e35c, #edd428)");
+
 
         HBox buttonBox = new HBox(40, onlineButton, botButton);
         buttonBox.setAlignment(Pos.CENTER);
@@ -127,7 +133,7 @@ public class GuiClient extends Application{
         nameTextField.setAlignment(Pos.CENTER);
 
         Button backButton = new Button("Back");
-        backButton.setStyle("-fx-background-color: #810000; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 125px;");
+        styleButton(backButton, "linear-gradient(#ff5252, #c50e29)", "linear-gradient(#ff8a80, #ff5252)");
 
         onlineButton.setOnAction(e -> {
             promptLabel.setText("You're playing online! What's your username?");
@@ -164,29 +170,72 @@ public class GuiClient extends Application{
     }
 
     public Scene createBoatPlaceScene(Label promptLabel, GridPane boatPane){ //bug if no users to display add error message
+
+
+        Button carrier = new Button("CARRIER (5)");
+        Button battleship = new Button("BATTLESHIP (4)");
+        Button cruiser = new Button("CRUISER (3)");
+        Button submarine = new Button("SUBMARINE (3)");
+        Button destroyer = new Button("DESTROYER (2)");
+
+        styleRectangleButton(carrier);
+        styleRectangleButton(battleship);
+        styleRectangleButton(cruiser);
+        styleRectangleButton(submarine);
+        styleRectangleButton(destroyer);
+
+        Text remaining = new Text("Remaining Boats - 5");
+
+
+
+        VBox ships = new VBox(10,remaining,carrier,battleship,cruiser,submarine,destroyer);
+        ships.setAlignment(Pos.CENTER);
+        HBox h1 = new HBox(200, boatPane,ships);
+        h1.setAlignment(Pos.CENTER);
+        VBox v1 = new VBox(25,promptLabel,h1);
+        v1.setAlignment(Pos.CENTER);
+
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
 
-        pane.setTop(promptLabel);
-        pane.setCenter(boatPane);
+        pane.setCenter(v1);
         BorderPane.setAlignment(promptLabel, Pos.CENTER);
-        BorderPane.setAlignment(boatPane, Pos.CENTER);
-
-        return new Scene(pane, 900, 900);
+        return new Scene(pane, 700, 500);
     }
 
-    public void boatPlace(Stage primaryStage){
+    public void boatPlace(Stage primaryStage) {
         Label promptLabel = new Label("Place Your Boats");
         promptLabel.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
 
         GridPane boatPane = new GridPane();
+
         int numColumns = 10;
         int numRows = 10;
         int cellSize = 30;
 
+        // Add row labels (1 to 10)
+        for (int col = 0; col < numColumns; col++) {
+            Label colLabel = new Label(Integer.toString(col + 1));
+            colLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+            colLabel.setMinSize(cellSize, cellSize);
+            colLabel.setAlignment(Pos.CENTER);
+            boatPane.add(colLabel, col+1, 0); // Offset by one for the column labels
+        }
+
+        // Add column labels (A to J)
+        char rowChar = 'A';
         for (int row = 0; row < numRows; row++) {
-            for (int col = 0; col < numColumns; col++) {
+            Label rowLabel = new Label(String.valueOf((char)(rowChar + row)));
+            rowLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+            rowLabel.setMinSize(cellSize, cellSize);
+            rowLabel.setAlignment(Pos.CENTER);
+            boatPane.add(rowLabel, 0, row+1); // Offset by one for the row labels
+        }
+
+        // Populate the grid
+        for (int row = 1; row <= numRows; row++) {
+            for (int col = 1; col <= numColumns; col++) {
                 Rectangle cell = new Rectangle(cellSize, cellSize);
                 cell.setStroke(Color.BLACK);
                 cell.setFill(Color.TRANSPARENT);
@@ -194,25 +243,23 @@ public class GuiClient extends Application{
                     Rectangle source = (Rectangle) event.getSource();
                     if (source.getFill() == Color.TRANSPARENT) {
                         source.setFill(Color.DARKGRAY);
-                    }
-                    else {
+                    } else {
                         source.setFill(Color.TRANSPARENT);
                     }
-
                 });
-
-                boatPane.add(cell, col, row);
+                boatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
         }
-        boatPane.setGridLinesVisible(true);
+
 
         sceneMap.put("prep", createBoatPlaceScene(promptLabel, boatPane));
         primaryStage.setScene(sceneMap.get("prep"));
     }
 
+
     private Button styleRectangleButton(Button button){
         int buttonX = 120;
-        int buttonY = 60;
+        int buttonY = 40;
 
         button.setStyle("-fx-font-size: 14; -fx-background-insets: 0; -fx-padding: 0; -fx-text-fill: black; -fx-font-family: Arial;");
         button.setPrefWidth(buttonX);
@@ -223,6 +270,35 @@ public class GuiClient extends Application{
         button.setPadding(new Insets(10));
 
         return button;
+    }
+
+    private void styleButton(Button button, String baseColor, String hoverColor) {
+        button.setStyle("-fx-font-size: 15px; " +
+                "-fx-background-color: " + baseColor + "; " +
+                "-fx-text-fill: white; " +
+                "-fx-pref-width: 100px; " +
+                "-fx-pref-height: 20px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20;");
+        button.setEffect(new DropShadow(10, Color.BLACK));
+
+        // Hover effect
+        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " +
+                "-fx-background-color: " + hoverColor + "; " +
+                "-fx-text-fill: white; " +
+                "-fx-pref-width: 110px; " +  // Slightly larger on hover
+                "-fx-pref-height: 35px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
+        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 15px; " +
+                "-fx-background-color: " + baseColor + "; " +
+                "-fx-text-fill: white; " +
+                "-fx-pref-width: 100px; " +
+                "-fx-pref-height: 20px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
 }
