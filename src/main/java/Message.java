@@ -25,4 +25,7 @@ public class Message implements Serializable {
         this.username = username;
         this.cells = cells;
     }
+
+    public Message() {
+    }
 }

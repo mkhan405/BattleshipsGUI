@@ -10,7 +10,6 @@ public class Client extends Thread{
     Socket socketClient;
     ObjectOutputStream out;
     ObjectInputStream in;
-
     private Consumer<Serializable> callback;
 
     Client(Consumer<Serializable> call){ callback = call;}
@@ -27,19 +26,24 @@ public class Client extends Thread{
 
         while(true) { //this loop is for exclusively checking the username--> might have to modify is for just message objects later tho
             try {
-                Object received = in.readObject();
-                if(received instanceof ArrayList){
-                    ArrayList<Message>activeUsers = (ArrayList<Message>) received;
-                    callback.accept(activeUsers);
-                }
-                else{
-                    Message getMessage = (Message)received;
-                    //System.out.println("Recieved from server " + "From: " + getMessage.userName + " Message: " + getMessage.userMessage + " Type: " + getMessage.messageType);
-                    callback.accept(getMessage);
-                }
+                Message message = (Message) in.readObject();
+                callback.accept(message);
             }
-
             catch(Exception e) {}
+//            try {
+//                Object received = in.readObject();
+//                if(received instanceof ArrayList){
+//                    ArrayList<Message>activeUsers = (ArrayList<Message>) received;
+//                    callback.accept(activeUsers);
+//                }
+//                else{
+//                    Message getMessage = (Message)received;
+//                    //System.out.println("Recieved from server " + "From: " + getMessage.userName + " Message: " + getMessage.userMessage + " Type: " + getMessage.messageType);
+//                    callback.accept(getMessage);
+//                }
+//            }
+//
+//            catch(Exception e) {}
         }
 
     }
