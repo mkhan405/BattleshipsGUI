@@ -1,37 +1,31 @@
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Message implements Serializable {
     static final long serialVersionUID = 42L;
-    String userMessage;
-    String messageType;
+    String type;
+    String content;
+    String username;
+    ArrayList<Integer> cells;
 
-    String userName;
-
-    String groupName = null;
-    String recipient = null;
-
-
-    public String getGroupName() {
-        return groupName;
+    Message(String type, String content) {
+        this.type = type;
+        this.content = content;
     }
 
-    public String getRecipient() {
-        return recipient;
+    Message(String type, String content, String username) {
+        this.type = type;
+        this.content = content;
+        this.username = username;
     }
 
-
-    public Message(){}
-
-    public String getuserMessage(){
-        return userMessage;
+    Message(String type, String content, String username, ArrayList<Integer> cells) {
+        this.type = type;
+        this.content = content;
+        this.username = username;
+        this.cells = cells;
     }
 
-    public String getmessageType(){
-        return messageType;
+    public Message() {
     }
-
-    public String getuserName(){
-        return userName;
-    }
-
 }
