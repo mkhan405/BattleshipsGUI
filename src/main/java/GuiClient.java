@@ -22,16 +22,16 @@ import javafx.stage.WindowEvent;
 import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
-    private Text welcomeText, promptText, errorText;
-    private Button onlineButton, botButton, backButton;
-    private HBox buttonBox;
+    private Text welcomeText, promptText, errorText, username, promptLabel, remaining;
+    private Button onlineButton, botButton, backButton, vertical, horizontal;
+    private Button battleship, cruiser, submarine, carrier, destroyer;
+    private GridPane boatPane;
     private TextField nameTextField;
-    private VBox mainVBox;
+    private HBox buttonBox, h1, h2;
+    private VBox welcomeVBox, ships, v1;
     private Message client = new Message();
     private ArrayList<String> allUsers = new ArrayList<>();
-    private ArrayList<Message> userNames = new ArrayList<>();
-    private String username;
-    private VBox otherUsers = new VBox(10);
+    private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
 
@@ -45,58 +45,22 @@ public class GuiClient extends Application{
                 if (data instanceof Message) {
                     Message message = (Message) data;
 
-                    if (message.type.equals("registration_error")){
-                        errorText.setText("Username already exists! Choose a different username");
-                        errorText.setStyle("-fx-text-fill: red; -fx-font-size: 16; -fx-font-family: Arial");
-                    }
-                    else if (message.type.equals("user_registered")){
-                        Button newUserButton = new Button(message.username);
-                        styleRectangleButton(newUserButton);
-                        newUserButton.setStyle("-fx-background-color: white;");
-                        otherUsers.getChildren().add(newUserButton);
-                        userNames.add(message);
+                    if (message.type.equals("user_registered")){ // New user has joined the server
+                        messages.add(message);
+//                        username.setText(nameTextField.getText());
+                        nameTextField.clear();
                         boatPlace(primaryStage);
                     }
+                    else if (message.type.equals("registration_error")){ // username already exists
+                        username.setText("");
+                        errorText.setText("Username already exists! Choose a different username");
+                    }
+
                 }
             });
         });
 
         clientConnection.start();
-
-        onlineButton.setOnAction(e -> {
-            promptText.setText("You're playing online! What's your username?");
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(backButton);
-            mainVBox.getChildren().add(1, nameTextField);
-        });
-
-        botButton.setOnAction(e -> {
-            promptText.setText("You're playing with the AI! What's your username?");
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(backButton);
-            mainVBox.getChildren().add(1, nameTextField);
-        });
-
-        backButton.setOnAction(e -> {
-            promptText.setText("Play with another player or with the AI");
-            mainVBox.getChildren().remove(nameTextField);
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(onlineButton);
-            buttonBox.getChildren().add(botButton);
-        });
-
-        nameTextField.setOnAction(e->{
-            if (nameTextField.getText().isEmpty()) {
-                errorText.setText("Invalid Empty Username");
-            }
-            else {
-                System.out.println("Sending this username: " + client.username);
-                clientConnection.send(new Message("new_user",nameTextField.getText()));
-                errorText.setText("");
-                nameTextField.clear();
-            }
-        });
-
 
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
@@ -113,13 +77,13 @@ public class GuiClient extends Application{
 
     public Scene createWelcomePage() {
         welcomeText = new Text("Welcome to Battleships!");
-        welcomeText.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
+        welcomeText.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
         promptText = new Text("Play with another player or with the AI");
-        promptText.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
+        promptText.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
 
         errorText = new Text();
-        errorText.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: red; -fx-font-family: Arial;");
+        errorText.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: red; -fx-font-family: Arial;");
 
         onlineButton = new Button("Online");
         styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
@@ -130,33 +94,71 @@ public class GuiClient extends Application{
         backButton = new Button("Back");
         styleButton(backButton, "linear-gradient(#ff5252, #c50e29)", "linear-gradient(#ff8a80, #ff5252)");
 
+        nameTextField = new TextField();
+        nameTextField.setMaxWidth(300);
+        nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
+
+        onlineButton.setOnAction(e -> {
+            promptText.setText("You're playing online! What's your username?");
+            buttonBox.getChildren().clear();
+            buttonBox.getChildren().add(backButton);
+            welcomeVBox.getChildren().add(1, nameTextField);
+        });
+
+        botButton.setOnAction(e -> {
+            promptText.setText("You're playing with the AI! What's your username?");
+            buttonBox.getChildren().clear();
+            buttonBox.getChildren().add(backButton);
+            welcomeVBox.getChildren().add(1, nameTextField);
+        });
+
+        backButton.setOnAction(e -> {
+            promptText.setText("Play with another player or with the AI");
+            welcomeVBox.getChildren().remove(nameTextField);
+            buttonBox.getChildren().clear();
+            buttonBox.getChildren().add(onlineButton);
+            buttonBox.getChildren().add(botButton);
+            errorText.setText("");
+        });
+
+        username = new Text();
+        username.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+
+
+        nameTextField.setOnAction(e->{
+            if (nameTextField.getText().isEmpty()) {
+                errorText.setText("Invalid Empty Username");
+            }
+            else {
+                clientConnection.send(new Message("new_user",nameTextField.getText()));
+                username.setText(nameTextField.getText());
+                errorText.setText("");
+                nameTextField.clear();
+            }
+        });
+
         buttonBox = new HBox(40, onlineButton, botButton);
         buttonBox.setAlignment(Pos.CENTER);
 
-        nameTextField = new TextField();
-        nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
-        nameTextField.setAlignment(Pos.CENTER);
+        welcomeVBox = new VBox(20, welcomeText,promptText, errorText, buttonBox);
+        welcomeVBox.setAlignment(Pos.CENTER);
 
-        mainVBox = new VBox(20, promptText, errorText, buttonBox);
-        mainVBox.setAlignment(Pos.CENTER);
-
-        BorderPane pane = new BorderPane();
-        pane.setPadding(new Insets(70));
-        pane.setTop(welcomeText);
-        BorderPane.setAlignment(welcomeText, Pos.CENTER);
-        pane.setCenter(mainVBox);
+        BorderPane pane = new BorderPane(welcomeVBox);
         pane.setStyle("-fx-background-color: #383838;");
 
-        return new Scene(pane, 600, 600);
+        return new Scene(pane, 550, 550);
     }
 
-    public Scene createBoatPlaceScene(Label promptLabel, GridPane boatPane){ //bug if no users to display add error message
+    public Scene createBoatPlaceScene(){ //bug if no users to display add error message
 
-        Button carrier = new Button("CARRIER (5)");
-        Button battleship = new Button("BATTLESHIP (4)");
-        Button cruiser = new Button("CRUISER (3)");
-        Button submarine = new Button("SUBMARINE (3)");
-        Button destroyer = new Button("DESTROYER (2)");
+        promptLabel = new Text("Place Your Boats");
+        promptLabel.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+
+        carrier = new Button("CARRIER (5)");
+        battleship = new Button("BATTLESHIP (4)");
+        cruiser = new Button("CRUISER (3)");
+        submarine = new Button("SUBMARINE (3)");
+        destroyer = new Button("DESTROYER (2)");
 
         styleRectangleButton(carrier);
         styleRectangleButton(battleship);
@@ -164,29 +166,27 @@ public class GuiClient extends Application{
         styleRectangleButton(submarine);
         styleRectangleButton(destroyer);
 
-        Text remaining = new Text("Remaining Boats - 5");
+        remaining = new Text("Remaining Boats - 5");
 
-        VBox ships = new VBox(10,remaining,carrier,battleship,cruiser,submarine,destroyer);
+        ships = new VBox(10,remaining,carrier,battleship,cruiser,submarine,destroyer);
         ships.setAlignment(Pos.CENTER);
-        HBox h1 = new HBox(200, boatPane,ships);
+        h1 = new HBox(200, boatPane,ships);
         h1.setAlignment(Pos.CENTER);
-        VBox v1 = new VBox(25,promptLabel,h1);
+        h2 = new HBox(50, promptLabel, username);
+        h2.setAlignment(Pos.CENTER);
+        v1 = new VBox(25,h2,h1);
         v1.setAlignment(Pos.CENTER);
 
-        BorderPane pane = new BorderPane();
+        BorderPane pane = new BorderPane(v1);
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
 
-        pane.setCenter(v1);
         BorderPane.setAlignment(promptLabel, Pos.CENTER);
         return new Scene(pane, 700, 500);
     }
 
     public void boatPlace(Stage primaryStage) {
-        Label promptLabel = new Label("Place Your Boats");
-        promptLabel.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
-
-        GridPane boatPane = new GridPane();
+        boatPane = new GridPane();
 
         int numColumns = 10;
         int numRows = 10;
@@ -229,8 +229,8 @@ public class GuiClient extends Application{
             }
         }
 
-        sceneMap.put("prep", createBoatPlaceScene(promptLabel, boatPane));
-        primaryStage.setScene(sceneMap.get("prep"));
+        sceneMap.put("game", createBoatPlaceScene());
+        primaryStage.setScene(sceneMap.get("game"));
     }
 
     private Button styleRectangleButton(Button button){
