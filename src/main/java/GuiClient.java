@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -15,25 +14,27 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
-    private Text welcomeText, promptText, errorText, username, promptLabel, remaining;
+    private Text welcomeText, promptText, errorText, username, promptLabel, remaining, t1,t2,t3, errorT1;
     private Button onlineButton, botButton, backButton, vertical, horizontal;
     private Button battleship, cruiser, submarine, carrier, destroyer;
     private GridPane boatPane;
     private TextField nameTextField;
     private HBox buttonBox, h1, h2;
-    private VBox welcomeVBox, ships, v1;
+    private VBox welcomeVBox, ships,orientation, v1;
     private Message client = new Message();
     private ArrayList<String> allUsers = new ArrayList<>();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
+    private final int numColumns = 10, numRows = 10;
+    private String currentOrientation = null;
+    private Button selectedShip = null;
+
 
     public static void main(String[] args) {
         launch(args);
@@ -150,7 +151,6 @@ public class GuiClient extends Application{
     }
 
     public Scene createBoatPlaceScene(){ //bug if no users to display add error message
-
         promptLabel = new Text("Place Your Boats");
         promptLabel.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
 
@@ -160,36 +160,81 @@ public class GuiClient extends Application{
         submarine = new Button("SUBMARINE (3)");
         destroyer = new Button("DESTROYER (2)");
 
-        styleRectangleButton(carrier);
-        styleRectangleButton(battleship);
-        styleRectangleButton(cruiser);
-        styleRectangleButton(submarine);
-        styleRectangleButton(destroyer);
+        t1 = new Text("Selected Boat");
+        t2 = new Text("Required Blocks");
+        t3 = new Text("Orientation Selected");
+        errorT1 = new Text("");
+        t1.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
+        t2.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
+        t3.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
+        errorT1.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: red; -fx-font-family: Arial;");
+
+        vertical = new Button("Vertical");
+        horizontal = new Button("Horizontal");
+
+        styleRectangleButton(carrier);styleRectangleButton(battleship);styleRectangleButton(cruiser);styleRectangleButton(submarine);styleRectangleButton(destroyer);styleRectangleButton(vertical);styleRectangleButton(horizontal);
 
         remaining = new Text("Remaining Boats - 5");
+        remaining.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
 
-        ships = new VBox(10,remaining,carrier,battleship,cruiser,submarine,destroyer);
+
+        ships = new VBox(20,remaining,carrier,battleship,cruiser,submarine,destroyer);
         ships.setAlignment(Pos.CENTER);
-        h1 = new HBox(200, boatPane,ships);
+        orientation = new VBox(20,t1,t2,t3,vertical,horizontal,errorT1);
+        orientation.setAlignment(Pos.CENTER);
+        h1 = new HBox(100, boatPane,ships);
         h1.setAlignment(Pos.CENTER);
         h2 = new HBox(50, promptLabel, username);
         h2.setAlignment(Pos.CENTER);
         v1 = new VBox(25,h2,h1);
         v1.setAlignment(Pos.CENTER);
 
+
+        carrier.setUserData(5); // Length, Count of ship placement
+        battleship.setUserData(4);
+        cruiser.setUserData(3);
+        submarine.setUserData(3);
+        destroyer.setUserData(2);
+
+        carrier.setOnAction(e -> selectShip(carrier));
+        battleship.setOnAction(e -> selectShip(battleship));
+        cruiser.setOnAction(e -> selectShip(cruiser));
+        submarine.setOnAction(e -> selectShip(submarine));
+        destroyer.setOnAction(e -> selectShip(destroyer));
+
+        vertical.setOnAction(e -> {
+            currentOrientation = "Vertical";
+            errorT1.setText("");
+            t3.setText("Orientation Selected: Vertical");
+        });
+        horizontal.setOnAction(e ->{
+            currentOrientation = "Horizontal";
+            errorT1.setText("");
+            t3.setText("Orientation Selected: Horizontal");
+        });
+
         BorderPane pane = new BorderPane(v1);
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
 
         BorderPane.setAlignment(promptLabel, Pos.CENTER);
-        return new Scene(pane, 700, 500);
+        return new Scene(pane, 700, 700);
     }
+
+    private void selectShip(Button ship) {
+        if (selectedShip != null) {
+            selectedShip.setDisable(false);
+        }
+        selectedShip = ship;
+        ship.setDisable(true);
+        h1.getChildren().remove(1);
+        h1.getChildren().add(1, orientation);
+    }
+
 
     public void boatPlace(Stage primaryStage) {
         boatPane = new GridPane();
 
-        int numColumns = 10;
-        int numRows = 10;
         int cellSize = 30;
 
         // Add row labels (1 to 10)
@@ -217,13 +262,12 @@ public class GuiClient extends Application{
                 Rectangle cell = new Rectangle(cellSize, cellSize);
                 cell.setStroke(Color.BLACK);
                 cell.setFill(Color.TRANSPARENT);
+                cell.setUserData(true);
+                final int finalRow = row; // Adjust for zero-based index
+                final int finalCol = col; // Adjust for zero-based index
                 cell.setOnMouseClicked(event -> {
-                    Rectangle source = (Rectangle) event.getSource();
-                    if (source.getFill() == Color.TRANSPARENT) {
-                        source.setFill(Color.DARKGRAY);
-                    } else {
-                        source.setFill(Color.TRANSPARENT);
-                    }
+                    placeShip(finalRow, finalCol, cell);
+
                 });
                 boatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
@@ -233,7 +277,73 @@ public class GuiClient extends Application{
         primaryStage.setScene(sceneMap.get("game"));
     }
 
-    private Button styleRectangleButton(Button button){
+    private void placeShip(int row, int col, Rectangle cell) {
+        if (selectedShip == null) return; // No ship selected
+        if (currentOrientation == null) {
+            errorT1.setText("Must Choose Orientation");
+            return;
+        }
+
+        int shipSize = (int) selectedShip.getUserData();
+
+        if (currentOrientation.equals("Horizontal")) {
+            if (col + shipSize > numColumns+1) {
+                errorT1.setText("Out of Bounds");
+                return;
+            } // Ship doesn't fit
+            for (int i = 0; i < shipSize; i++) {
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col + i, row);
+                if(targetCell.getUserData().equals(false)) {
+                    errorT1.setText("Merge with another ship");
+                    return;
+                }
+            }
+            for (int i = 0; i < shipSize; i++) {
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col + i, row);
+                targetCell.setFill(Color.DARKGRAY);
+                targetCell.setUserData(false);
+            }
+            errorT1.setText("");
+        } else if(currentOrientation.equals("Vertical")){ // Vertical placement
+            if (row + shipSize > numRows+1) {
+                errorT1.setText("Out of Bounds");
+                return;
+            } // Ship doesn't fit
+            for (int i = 0; i < shipSize; i++) {
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col, row + i);
+                if(targetCell.getUserData().equals(false)) {
+                    errorT1.setText("Merge with another ship");
+                    return;
+                }
+            }
+            for (int i = 0; i < shipSize; i++) {
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col, row + i);
+                targetCell.setFill(Color.DARKGRAY);
+                targetCell.setUserData(false);
+            }
+            errorT1.setText("");
+        }
+
+        selectedShip.setDisable(true);
+        selectedShip = null;
+        currentOrientation = null;
+        t3.setText("Orientation Selected: ");
+
+        h1.getChildren().remove(1);
+        h1.getChildren().add(1, ships);
+    }
+
+    private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
+        for (Node node : gridPane.getChildren()) {
+            if (GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null &&
+                    GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    private void styleRectangleButton(Button button){
         int buttonX = 120;
         int buttonY = 40;
 
@@ -245,7 +355,6 @@ public class GuiClient extends Application{
         button.setShape(rectangle);
         button.setPadding(new Insets(10));
 
-        return button;
     }
 
     private void styleButton(Button button, String baseColor, String hoverColor) {
@@ -293,5 +402,3 @@ public class GuiClient extends Application{
         gridPane.add(imageView, column, row);
     }
 }
-
-
