@@ -41,7 +41,7 @@ public class GuiClient extends Application{
     }
     @Override
     public void start(Stage primaryStage) throws Exception {
-        clientConnection = new Client(data->{
+        clientConnection = new Client(data->
             Platform.runLater(()->{
                 if (data instanceof Message) {
                     Message message = (Message) data;
@@ -58,8 +58,8 @@ public class GuiClient extends Application{
                     }
 
                 }
-            });
-        });
+            })
+        );
 
         clientConnection.start();
 
@@ -68,7 +68,7 @@ public class GuiClient extends Application{
             System.exit(0);
         });
 
-        sceneMap = new HashMap<String, Scene>();
+        sceneMap = new HashMap<>();
         sceneMap.put("welcome", createWelcomePage());
 
         primaryStage.setScene(sceneMap.get("welcome"));
@@ -265,10 +265,7 @@ public class GuiClient extends Application{
                 cell.setUserData(true);
                 final int finalRow = row; // Adjust for zero-based index
                 final int finalCol = col; // Adjust for zero-based index
-                cell.setOnMouseClicked(event -> {
-                    placeShip(finalRow, finalCol, cell);
-
-                });
+                cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol, cell));
                 boatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
         }
@@ -388,17 +385,16 @@ public class GuiClient extends Application{
 
     public void addImageToGridPane(GridPane gridPane, String imagePath, int column, int row) {
         // Create an image object
-        Image image = new Image(imagePath);
 
         // Create an ImageView and set the image to it
-        ImageView imageView = new ImageView(image);
+        ImageView imageView = new ImageView(new Image(imagePath));
 
         // You might want to adjust the size of the image view to fit the cell
         imageView.setFitWidth(gridPane.getColumnConstraints().get(column).getPrefWidth());
         imageView.setFitHeight(gridPane.getRowConstraints().get(row).getPrefHeight());
         imageView.setPreserveRatio(true);
 
-        // Add the ImageView to the gridpane at the specified column and row
+        // Add the ImageView to the gridPane at the specified column and row
         gridPane.add(imageView, column, row);
     }
 }
