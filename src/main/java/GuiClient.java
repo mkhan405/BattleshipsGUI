@@ -24,6 +24,7 @@ import javafx.scene.text.Text;
 public class GuiClient extends Application{
     private Text welcomeText, promptText, errorText;
     private Button onlineButton, botButton, backButton;
+    private HBox buttonBox;
     private TextField nameTextField;
     private VBox mainVBox;
     private Message client = new Message();
@@ -41,37 +42,19 @@ public class GuiClient extends Application{
     public void start(Stage primaryStage) throws Exception {
         clientConnection = new Client(data->{
             Platform.runLater(()->{
-                if (data instanceof ArrayList) {
-                    userNames = (ArrayList<Message>) data;
-                    for (Message s: userNames){
-                        if (!s.username.equals(client.username)){
-                            Button userButton = new Button(s.username);
-                            styleRectangleButton(userButton);
-                            userButton.setStyle("-fx-background-color: white;");
-                            otherUsers.getChildren().addAll(userButton);
-                        }
-                    }
-                }
-                else {
+                if (data instanceof Message) {
                     Message message = (Message) data;
+
                     if (message.type.equals("registration_error")){
-                        mainVBox.getChildren().remove(errorText);
                         errorText.setText("Username already exists! Choose a different username");
                         errorText.setStyle("-fx-text-fill: red; -fx-font-size: 16; -fx-font-family: Arial");
-                        mainVBox.getChildren().add(errorText);
                     }
-                    // New user has joined the server
                     else if (message.type.equals("user_registered")){
-                        if(!allUsers.contains(message.username)) {
-                            Button newUserButton = new Button(message.username);
-                            styleRectangleButton(newUserButton);
-                            newUserButton.setStyle("-fx-background-color: white;");
-                            otherUsers.getChildren().add(newUserButton);
-                            userNames.add(message);
-                            boatPlace(primaryStage);
-                        }
-                    }
-                    else {
+                        Button newUserButton = new Button(message.username);
+                        styleRectangleButton(newUserButton);
+                        newUserButton.setStyle("-fx-background-color: white;");
+                        otherUsers.getChildren().add(newUserButton);
+                        userNames.add(message);
                         boatPlace(primaryStage);
                     }
                 }
@@ -79,45 +62,6 @@ public class GuiClient extends Application{
         });
 
         clientConnection.start();
-
-        primaryStage.setOnCloseRequest(t -> {
-            Platform.exit();
-            System.exit(0);
-        });
-
-        sceneMap = new HashMap<String, Scene>();
-        sceneMap.put("welcome", createWelcomePage());
-
-        primaryStage.setScene(sceneMap.get("welcome"));
-        primaryStage.setTitle("Battleships");
-        primaryStage.show();
-    }
-
-    public Scene createWelcomePage() {
-        welcomeText = new Text("Welcome to Battleships!");
-        welcomeText.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
-
-        promptText = new Text("Play with another player or with the AI");
-        promptText.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
-
-        errorText = new Text();
-        errorText.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: red; -fx-font-family: Arial;");
-
-        onlineButton = new Button("Online");
-        styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
-
-        botButton = new Button("AI");
-        styleButton(botButton, "linear-gradient(#f0bf2b, #d4a004)", "linear-gradient(#f7e35c, #edd428)");
-
-        backButton = new Button("Back");
-        styleButton(backButton, "linear-gradient(#ff5252, #c50e29)", "linear-gradient(#ff8a80, #ff5252)");
-
-        HBox buttonBox = new HBox(40, onlineButton, botButton);
-        buttonBox.setAlignment(Pos.CENTER);
-
-        nameTextField = new TextField();
-        nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
-        nameTextField.setAlignment(Pos.CENTER);
 
         onlineButton.setOnAction(e -> {
             promptText.setText("You're playing online! What's your username?");
@@ -152,6 +96,46 @@ public class GuiClient extends Application{
                 nameTextField.clear();
             }
         });
+
+
+        primaryStage.setOnCloseRequest(t -> {
+            Platform.exit();
+            System.exit(0);
+        });
+
+        sceneMap = new HashMap<String, Scene>();
+        sceneMap.put("welcome", createWelcomePage());
+
+        primaryStage.setScene(sceneMap.get("welcome"));
+        primaryStage.setTitle("Battleships");
+        primaryStage.show();
+    }
+
+    public Scene createWelcomePage() {
+        welcomeText = new Text("Welcome to Battleships!");
+        welcomeText.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
+
+        promptText = new Text("Play with another player or with the AI");
+        promptText.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: Arial;");
+
+        errorText = new Text();
+        errorText.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: red; -fx-font-family: Arial;");
+
+        onlineButton = new Button("Online");
+        styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
+
+        botButton = new Button("AI");
+        styleButton(botButton, "linear-gradient(#f0bf2b, #d4a004)", "linear-gradient(#f7e35c, #edd428)");
+
+        backButton = new Button("Back");
+        styleButton(backButton, "linear-gradient(#ff5252, #c50e29)", "linear-gradient(#ff8a80, #ff5252)");
+
+        buttonBox = new HBox(40, onlineButton, botButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        nameTextField = new TextField();
+        nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
+        nameTextField.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(20, promptText, errorText, buttonBox);
         mainVBox.setAlignment(Pos.CENTER);
