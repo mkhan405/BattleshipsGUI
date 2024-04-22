@@ -6,22 +6,14 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
-
-
 public class Client extends Thread{
-
-
     Socket socketClient;
-
     ObjectOutputStream out;
     ObjectInputStream in;
 
     private Consumer<Serializable> callback;
 
-    Client(Consumer<Serializable> call){
-
-        callback = call;
-    }
+    Client(Consumer<Serializable> call){ callback = call;}
 
     public void run() {
 
@@ -54,12 +46,7 @@ public class Client extends Thread{
 
     public void send(Message data) {
         try {
-            Message sendData = new Message();
-            sendData.userName = data.userName;
-            sendData.userMessage = data.userMessage;
-            sendData.messageType = data.messageType;
-            sendData.recipient = data.recipient;
-            out.writeObject(sendData);
+            out.writeObject(data);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
