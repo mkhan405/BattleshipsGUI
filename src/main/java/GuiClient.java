@@ -234,15 +234,13 @@ public class GuiClient extends Application{
         styleRectangleButton(verticalButton);
         styleRectangleButton(horizontalButton);
         styleButton(confirmButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
-//        confirmButton.setStyle("-fx-background-color: #258802; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 100px;");
+
 
         verticalButton.setOnAction(e -> {
             currentOrientation = "Vertical";
             verticalButton.setDisable(true);
             horizontalButton.setDisable(false);
             orientationSelected.setText("Orientation Selected: Vertical");
-//            verticalButton.setStyle(verticalButton.getStyle() + "-fx-background-color: #505050;");
-//            styleRectangleButton(horizontalButton);
             error.setText("");
         });
         horizontalButton.setOnAction(e ->{
@@ -250,8 +248,6 @@ public class GuiClient extends Application{
             horizontalButton.setDisable(true);
             verticalButton.setDisable(false);
             orientationSelected.setText("Orientation Selected: Horizontal");
-//            horizontalButton.setStyle(horizontalButton.getStyle() + "-fx-background-color: #505050;");
-//            styleRectangleButton(verticalButton);
             error.setText("");
         });
 
@@ -375,8 +371,7 @@ public class GuiClient extends Application{
         remaining.setText("Remaining Boats: " + (--remainingBoats));
         horizontalButton.setDisable(false);
         verticalButton.setDisable(false);
-//        styleRectangleButton(horizontalButton);
-//        styleRectangleButton(verticalButton);
+        orientationSelected.setText("Orientation Selected");
 
         middleHBox.getChildren().remove(1);
         middleHBox.getChildren().add(1, boatSelectBox);
@@ -397,8 +392,8 @@ public class GuiClient extends Application{
     }
 
     private void styleRectangleButton(Button button){
-        int buttonX = 120;
-        int buttonY = 40;
+//        int buttonX = 120;
+//        int buttonY = 40;
 
         button.setStyle("-fx-font-size: 14px; " +
                 "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
