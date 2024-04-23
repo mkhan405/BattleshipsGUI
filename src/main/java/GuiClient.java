@@ -54,7 +54,6 @@ public class GuiClient extends Application{
 
                     if (message.type.equals("user_registered")){ // New user has joined the server
                         messages.add(message);
-//                        username.setText(nameTextField.getText());
                         nameTextField.clear();
                         boatPlace(primaryStage);
                     }
@@ -234,18 +233,25 @@ public class GuiClient extends Application{
         confirmButton = new Button("Confirm");
         styleRectangleButton(verticalButton);
         styleRectangleButton(horizontalButton);
-        confirmButton.setStyle("-fx-background-color: #258802; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 100px;");
+        styleButton(confirmButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
+//        confirmButton.setStyle("-fx-background-color: #258802; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 100px;");
 
         verticalButton.setOnAction(e -> {
             currentOrientation = "Vertical";
-            verticalButton.setStyle(verticalButton.getStyle() + "-fx-background-color: #505050;");
-            styleRectangleButton(horizontalButton);
+            verticalButton.setDisable(true);
+            horizontalButton.setDisable(false);
+            orientationSelected.setText("Orientation Selected: Vertical");
+//            verticalButton.setStyle(verticalButton.getStyle() + "-fx-background-color: #505050;");
+//            styleRectangleButton(horizontalButton);
             error.setText("");
         });
         horizontalButton.setOnAction(e ->{
             currentOrientation = "Horizontal";
-            horizontalButton.setStyle(horizontalButton.getStyle() + "-fx-background-color: #505050;");
-            styleRectangleButton(verticalButton);
+            horizontalButton.setDisable(true);
+            verticalButton.setDisable(false);
+            orientationSelected.setText("Orientation Selected: Horizontal");
+//            horizontalButton.setStyle(horizontalButton.getStyle() + "-fx-background-color: #505050;");
+//            styleRectangleButton(verticalButton);
             error.setText("");
         });
 
@@ -367,8 +373,10 @@ public class GuiClient extends Application{
         selectedShip = null;
         currentOrientation = null;
         remaining.setText("Remaining Boats: " + (--remainingBoats));
-        styleRectangleButton(horizontalButton);
-        styleRectangleButton(verticalButton);
+        horizontalButton.setDisable(false);
+        verticalButton.setDisable(false);
+//        styleRectangleButton(horizontalButton);
+//        styleRectangleButton(verticalButton);
 
         middleHBox.getChildren().remove(1);
         middleHBox.getChildren().add(1, boatSelectBox);
@@ -392,14 +400,40 @@ public class GuiClient extends Application{
         int buttonX = 120;
         int buttonY = 40;
 
-        button.setStyle("-fx-font-size: 14; -fx-background-insets: 0; -fx-padding: 0; -fx-text-fill: black; -fx-font-family: Arial;");
-        button.setPrefWidth(buttonX);
-        button.setPrefHeight(buttonY);
+        button.setStyle("-fx-font-size: 14px; " +
+                "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
+                "-fx-text-fill: black; " +
+                "-fx-pref-width: 120px; " +
+                "-fx-pref-height: 40px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20;");
+        button.setEffect(new DropShadow(10, Color.BLACK));
 
-        Rectangle rectangle = new Rectangle(buttonX, buttonY);
-        button.setShape(rectangle);
-        button.setPadding(new Insets(10));
+        // Hover effect
+        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 14px; " +
+                "-fx-background-color: " + "linear-gradient(#a2a4a6, #bbbdbf)" + "; " +
+                "-fx-text-fill: black; " +
+                "-fx-pref-width: 125px; " +  // Slightly larger on hover
+                "-fx-pref-height: 45px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
+        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 14px; " +
+                "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
+                "-fx-text-fill: black; " +
+                "-fx-pref-width: 120px; " +
+                "-fx-pref-height: 40px; " +
+                "-fx-border-radius: 20; " +
+                "-fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
 
+//        button.setStyle("-fx-font-size: 14; -fx-background-insets: 0; -fx-padding: 0; -fx-text-fill: black; -fx-font-family: Arial;");
+//        button.setPrefWidth(buttonX);
+//        button.setPrefHeight(buttonY);
+//
+//        Rectangle rectangle = new Rectangle(buttonX, buttonY);
+//        button.setShape(rectangle);
+//        button.setPadding(new Insets(10));
     }
 
     private void styleButton(Button button, String baseColor, String hoverColor) {
