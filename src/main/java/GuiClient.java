@@ -19,21 +19,20 @@ import javafx.stage.Stage;
 import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
-    private Text welcomeText, promptText, errorText, promptLabel, remaining, selected, requiredBlocks, orientationSelected, errorT1;
-    private Button onlineButton, botButton, backButton, vertical, horizontal;
-    private Button battleship, cruiser, submarine, carrier, destroyer;
+    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error;
+    private Button onlineButton, botButton, backButton, verticalButton, horizontalButton, confirmButton;
+    private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane boatPane;
     private TextField nameTextField;
-    private HBox buttonBox, middleHBox, topHBox;
-    private VBox welcomeVBox, boatSelectBox, orientationBox, mainVBox;
+    private HBox buttonBox, middleHBox;
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox;
     private Message client = new Message();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
-    private final int numColumns = 10, numRows = 10;
+    private final int numColumns = 10, numRows = 10, cellSize = 30;
     private String currentOrientation = null, username;
-    private Button selectedShip = null;
-    private int remainingBoats = 5, cellSize = 30;
+    private int remainingBoats = 5;
     private String[] boatImages = {
             "shiphead.png",
             "shipmiddle.png",
@@ -60,7 +59,7 @@ public class GuiClient extends Application{
                         boatPlace(primaryStage);
                     }
                     else if (message.type.equals("registration_error")){ // username already exists
-                        errorText.setText("Username already exists! Choose a different username");
+                        nameError.setText("Username already exists! Choose a different username");
                     }
 
                 }
@@ -83,14 +82,14 @@ public class GuiClient extends Application{
     }
 
     public Scene createWelcomePage() {
-        welcomeText = new Text("Welcome to Battleships!");
-        welcomeText.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
+        welcome = new Text("Welcome to Battleships!");
+        welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
-        promptText = new Text("Play with another player or with the AI");
-        promptText.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
+        choose = new Text("Play with another player or with the AI");
+        choose.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
 
-        errorText = new Text();
-        errorText.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
+        nameError = new Text();
+        nameError.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
 
         onlineButton = new Button("Online");
         styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
@@ -106,37 +105,37 @@ public class GuiClient extends Application{
         nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
 
         onlineButton.setOnAction(e -> {
-            promptText.setText("You're playing online! What's your username?");
+            choose.setText("You're playing online! What's your username?");
             buttonBox.getChildren().clear();
             buttonBox.getChildren().add(backButton);
-            welcomeVBox.getChildren().add(1, nameTextField);
+            welcomeBox.getChildren().add(1, nameTextField);
         });
 
         botButton.setOnAction(e -> {
-            promptText.setText("You're playing with the AI! What's your username?");
+            choose.setText("You're playing with the AI! What's your username?");
             buttonBox.getChildren().clear();
             buttonBox.getChildren().add(backButton);
-            welcomeVBox.getChildren().add(1, nameTextField);
+            welcomeBox.getChildren().add(1, nameTextField);
         });
 
         backButton.setOnAction(e -> {
-            promptText.setText("Play with another player or with the AI");
-            welcomeVBox.getChildren().remove(nameTextField);
+            choose.setText("Play with another player or with the AI");
+            welcomeBox.getChildren().remove(nameTextField);
             buttonBox.getChildren().clear();
             buttonBox.getChildren().add(onlineButton);
             buttonBox.getChildren().add(botButton);
-            errorText.setText("");
+            nameError.setText("");
         });
 
 
         nameTextField.setOnAction(e->{
             if (nameTextField.getText().isEmpty()) {
-                errorText.setText("Invalid Empty Username");
+                nameError.setText("Invalid Empty Username");
             }
             else {
                 clientConnection.send(new Message("new_user",nameTextField.getText()));
                 username = nameTextField.getText();
-                errorText.setText("");
+                nameError.setText("");
                 nameTextField.clear();
             }
         });
@@ -144,10 +143,10 @@ public class GuiClient extends Application{
         buttonBox = new HBox(40, onlineButton, botButton);
         buttonBox.setAlignment(Pos.CENTER);
 
-        welcomeVBox = new VBox(20, welcomeText,promptText, errorText, buttonBox);
-        welcomeVBox.setAlignment(Pos.CENTER);
+        welcomeBox = new VBox(20, welcome, choose, nameError, buttonBox);
+        welcomeBox.setAlignment(Pos.CENTER);
 
-        BorderPane pane = new BorderPane(welcomeVBox);
+        BorderPane pane = new BorderPane(welcomeBox);
         pane.setStyle("-fx-background-color: #383838;");
 
         return new Scene(pane, 550, 550);
@@ -157,31 +156,33 @@ public class GuiClient extends Application{
         boatSelectBox = new VBox(20, remaining, carrier, battleship, cruiser, submarine, destroyer);
         boatSelectBox.setAlignment(Pos.CENTER);
 
-        orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, vertical, horizontal);
+        orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
         middleHBox = new HBox(100, boatPane, boatSelectBox);
         middleHBox.setAlignment(Pos.CENTER);
 
-        mainVBox = new VBox(25, promptLabel, middleHBox, errorT1);
+        mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
 
-        BorderPane pane = new BorderPane(mainVBox);
+        BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
+        pane.setCenter(mainVBox);
 
-        BorderPane.setAlignment(promptLabel, Pos.CENTER);
+        BorderPane.setAlignment(prompt, Pos.CENTER);
         return new Scene(pane, 700, 700);
     }
 
     private void selectShip(Button ship) {
+        error.setText("");
         if (selectedShip != null) {
             selectedShip.setDisable(false);
         }
         selectedShip = ship;
         ship.setDisable(true);
 
-        selected.setText("Selected Ship: " + ship.getText().split(" - ")[0]);
+        selected.setText("Selected: " + ship.getText().split(" - ")[0]);
         requiredBlocks.setText("Required Blocks: " + ship.getUserData());
 
         middleHBox.getChildren().remove(1);
@@ -190,8 +191,8 @@ public class GuiClient extends Application{
 
 
     public void boatPlace(Stage primaryStage) {
-        promptLabel = new Text("Place Your Boats, " + username);
-        promptLabel.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+        prompt = new Text("Place Your Boats, " + username);
+        prompt.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
 
         carrier = new Button("CARRIER - 5");
         battleship = new Button("BATTLESHIP - 4");
@@ -220,34 +221,36 @@ public class GuiClient extends Application{
 
         selected = new Text();
         requiredBlocks = new Text();
-        orientationSelected = new Text("Orientation Selected");
-        errorT1 = new Text("");
+        orientationSelected = new Text("Select Orientation");
+        error = new Text("");
 
-        selected.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
-        requiredBlocks.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
-        orientationSelected.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
-        errorT1.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
+        selected.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+        requiredBlocks.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+        orientationSelected.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+        error.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
 
-        vertical = new Button("Vertical");
-        horizontal = new Button("Horizontal");
-        styleRectangleButton(vertical);
-        styleRectangleButton(horizontal);
+        verticalButton = new Button("Vertical");
+        horizontalButton = new Button("Horizontal");
+        confirmButton = new Button("Confirm");
+        styleRectangleButton(verticalButton);
+        styleRectangleButton(horizontalButton);
+        confirmButton.setStyle("-fx-background-color: #258802; -fx-text-fill: white; -fx-background-radius: 20 20 20 20; -fx-font-size: 20; -fx-font-family: Arial; -fx-pref-width: 100px;");
 
-        vertical.setOnAction(e -> {
+        verticalButton.setOnAction(e -> {
             currentOrientation = "Vertical";
-            vertical.setStyle(vertical.getStyle() + "-fx-background-color: #505050;");
-            styleRectangleButton(horizontal);
-            errorT1.setText("");
+            verticalButton.setStyle(verticalButton.getStyle() + "-fx-background-color: #505050;");
+            styleRectangleButton(horizontalButton);
+            error.setText("");
         });
-        horizontal.setOnAction(e ->{
+        horizontalButton.setOnAction(e ->{
             currentOrientation = "Horizontal";
-            horizontal.setStyle(horizontal.getStyle() + "-fx-background-color: #505050;");
-            styleRectangleButton(vertical);
-            errorT1.setText("");
+            horizontalButton.setStyle(horizontalButton.getStyle() + "-fx-background-color: #505050;");
+            styleRectangleButton(verticalButton);
+            error.setText("");
         });
 
         remaining = new Text("Remaining Boats: " + remainingBoats);
-        remaining.setStyle("-fx-font-size: 16; -fx-font-weight: lighter; -fx-fill: black; -fx-font-family: Arial; ");
+        remaining.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         boatPane = new GridPane();
 
@@ -291,11 +294,14 @@ public class GuiClient extends Application{
     private void placeShip(int row, int col) {
         // No ship selected
         if (selectedShip == null) {
+            if (remainingBoats != 0) {
+                error.setText("Must Choose Boat");
+            }
             return;
         }
 
         if (currentOrientation == null) {
-            errorT1.setText("Must Choose Orientation");
+            error.setText("Must Choose Orientation");
             return;
         }
 
@@ -304,14 +310,14 @@ public class GuiClient extends Application{
         if (currentOrientation.equals("Horizontal")) {
             // Ship doesn't fit
             if (col + shipSize > numColumns + 1) {
-                errorT1.setText("Out of Bounds");
+                error.setText("Out of Bounds");
                 return;
             }
 
             for (int i = 0; i < shipSize; i++) {
                 Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col + i, row);
                 if(targetCell.getUserData().equals(false)) {
-                    errorT1.setText("Merge with another ship");
+                    error.setText("Merge with another ship");
                     return;
                 }
             }
@@ -332,13 +338,13 @@ public class GuiClient extends Application{
         } else if(currentOrientation.equals("Vertical")){
             // Ship doesn't fit
             if (row + shipSize > numRows+1) {
-                errorT1.setText("Out of Bounds");
+                error.setText("Out of Bounds");
                 return;
             }
             for (int i = 0; i < shipSize; i++) {
                 Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col, row + i);
                 if(targetCell.getUserData().equals(false)) {
-                    errorT1.setText("Merge with another ship");
+                    error.setText("Merge with another ship");
                     return;
                 }
             }
@@ -356,16 +362,20 @@ public class GuiClient extends Application{
             }
         }
 
-        errorT1.setText("");
+        error.setText("");
         selectedShip.setDisable(true);
         selectedShip = null;
         currentOrientation = null;
         remaining.setText("Remaining Boats: " + (--remainingBoats));
-        styleRectangleButton(horizontal);
-        styleRectangleButton(vertical);
+        styleRectangleButton(horizontalButton);
+        styleRectangleButton(verticalButton);
 
         middleHBox.getChildren().remove(1);
         middleHBox.getChildren().add(1, boatSelectBox);
+
+        if (remainingBoats == 0) {
+            boatSelectBox.getChildren().add(confirmButton);
+        }
     }
 
     private Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
