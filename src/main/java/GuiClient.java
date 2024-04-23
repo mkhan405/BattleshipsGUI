@@ -1,7 +1,5 @@
-
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -56,10 +54,23 @@ public class GuiClient extends Application{
                     if (message.type.equals("user_registered")){ // New user has joined the server
                         messages.add(message);
                         nameTextField.clear();
-                        boatPlace(primaryStage);
+                        choose.setText("Play with another player or with the AI");
+                        welcomeBox.getChildren().remove(nameTextField);
+                        welcomeBox.getChildren().add(buttonBox);
+                        nameError.setText("");
+//                        boatPlace(primaryStage);
                     }
                     else if (message.type.equals("registration_error")){ // username already exists
                         nameError.setText("Username already exists! Choose a different username");
+                    }
+                    else if(message.type.equals("wait_for_opponent")) {
+                        choose.setText("Waiting for opponent");
+                    }
+                    else if(message.type.equals("start_session")){
+                        boatPlace(primaryStage);
+                    }
+                    else if(message.type.equals("start_AI_session")){
+                        boatPlace(primaryStage);
                     }
 
                 }
@@ -105,27 +116,29 @@ public class GuiClient extends Application{
         nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
 
         onlineButton.setOnAction(e -> {
-            choose.setText("You're playing online! What's your username?");
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(backButton);
-            welcomeBox.getChildren().add(1, nameTextField);
+            clientConnection.send(new Message("request_session","multiplayer",nameTextField.getText()));
+//            choose.setText("You're playing online! What's your username?");
+//            buttonBox.getChildren().clear();
+//            buttonBox.getChildren().add(backButton);
+//            welcomeBox.getChildren().add(1, nameTextField);
         });
 
         botButton.setOnAction(e -> {
-            choose.setText("You're playing with the AI! What's your username?");
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(backButton);
-            welcomeBox.getChildren().add(1, nameTextField);
+            clientConnection.send(new Message("request_session","AI",nameTextField.getText()));
+//            choose.setText("You're playing with the AI! What's your username?");
+//            buttonBox.getChildren().clear();
+//            buttonBox.getChildren().add(backButton);
+//            welcomeBox.getChildren().add(1, nameTextField);
         });
 
-        backButton.setOnAction(e -> {
-            choose.setText("Play with another player or with the AI");
-            welcomeBox.getChildren().remove(nameTextField);
-            buttonBox.getChildren().clear();
-            buttonBox.getChildren().add(onlineButton);
-            buttonBox.getChildren().add(botButton);
-            nameError.setText("");
-        });
+//        backButton.setOnAction(e -> {
+//            choose.setText("Play with another player or with the AI");
+//            welcomeBox.getChildren().remove(nameTextField);
+//            buttonBox.getChildren().clear();
+//            buttonBox.getChildren().add(onlineButton);
+//            buttonBox.getChildren().add(botButton);
+//            nameError.setText("");
+//        });
 
 
         nameTextField.setOnAction(e->{
@@ -143,7 +156,7 @@ public class GuiClient extends Application{
         buttonBox = new HBox(40, onlineButton, botButton);
         buttonBox.setAlignment(Pos.CENTER);
 
-        welcomeBox = new VBox(20, welcome, choose, nameError, buttonBox);
+        welcomeBox = new VBox(20, welcome, choose, nameError, nameTextField);
         welcomeBox.setAlignment(Pos.CENTER);
 
         BorderPane pane = new BorderPane(welcomeBox);
