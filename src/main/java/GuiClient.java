@@ -19,13 +19,13 @@ import javafx.stage.Stage;
 import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
-    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error;
-    private Button onlineButton, botButton, backButton, verticalButton, horizontalButton, confirmButton;
+    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingEnemy;
+    private Button onlineButton, botButton, backButton, verticalButton, horizontalButton, confirmButton, hitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
-    private GridPane boatPane;
+    private GridPane playerBoatPane, enemyBoatPane;
     private TextField nameTextField;
     private HBox buttonBox, middleHBox;
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox;
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox;
     private Message client = new Message();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
@@ -33,6 +33,7 @@ public class GuiClient extends Application{
     private final int numColumns = 10, numRows = 10, cellSize = 30;
     private String currentOrientation = null, username;
     private int remainingBoats = 5;
+    private Rectangle currChosenCell = null;
     private String[] boatImages = {
             "shiphead.png",
             "shipmiddle.png",
@@ -80,7 +81,7 @@ public class GuiClient extends Application{
         primaryStage.show();
     }
 
-    public Scene createWelcomePage() {
+    private Scene createWelcomePage() {
         welcome = new Text("Welcome to Battleships!");
         welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
@@ -151,23 +152,22 @@ public class GuiClient extends Application{
         return new Scene(pane, 550, 550);
     }
 
-    public Scene createBoatPlaceScene(){
+    private Scene createBoatPlaceScene(){
         boatSelectBox = new VBox(20, remaining, carrier, battleship, cruiser, submarine, destroyer);
         boatSelectBox.setAlignment(Pos.CENTER);
 
         orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
-        middleHBox = new HBox(100, boatPane, boatSelectBox);
+        middleHBox = new HBox(100, playerBoatPane, boatSelectBox);
         middleHBox.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
 
-        BorderPane pane = new BorderPane();
+        BorderPane pane = new BorderPane(mainVBox);
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
-        pane.setCenter(mainVBox);
 
         BorderPane.setAlignment(prompt, Pos.CENTER);
         return new Scene(pane, 700, 700);
@@ -189,7 +189,7 @@ public class GuiClient extends Application{
     }
 
 
-    public void boatPlace(Stage primaryStage) {
+    private void boatPlace(Stage primaryStage) {
         prompt = new Text("Place Your Boats, " + username);
         prompt.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
 
@@ -234,6 +234,7 @@ public class GuiClient extends Application{
         styleRectangleButton(verticalButton);
         styleRectangleButton(horizontalButton);
         styleButton(confirmButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
+        confirmButton.setOnAction(e -> gamePlay(primaryStage));
 
 
         verticalButton.setOnAction(e -> {
@@ -254,7 +255,7 @@ public class GuiClient extends Application{
         remaining = new Text("Remaining Boats: " + remainingBoats);
         remaining.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
-        boatPane = new GridPane();
+        playerBoatPane = new GridPane();
 
         // Add row labels (1 to 10)
         for (int col = 0; col < numColumns; col++) {
@@ -262,7 +263,7 @@ public class GuiClient extends Application{
             colLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
             colLabel.setMinSize(cellSize, cellSize);
             colLabel.setAlignment(Pos.CENTER);
-            boatPane.add(colLabel, col + 1, 0); // Offset by one for the column labels
+            playerBoatPane.add(colLabel, col + 1, 0); // Offset by one for the column labels
         }
 
         // Add column labels (A to J)
@@ -272,7 +273,7 @@ public class GuiClient extends Application{
             rowLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
             rowLabel.setMinSize(cellSize, cellSize);
             rowLabel.setAlignment(Pos.CENTER);
-            boatPane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
+            playerBoatPane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
         }
 
         // Populate the grid
@@ -285,12 +286,114 @@ public class GuiClient extends Application{
                 int finalRow = row; // Adjust for zero-based index
                 int finalCol = col; // Adjust for zero-based index
                 cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol));
-                boatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
+                playerBoatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
         }
 
-        sceneMap.put("game", createBoatPlaceScene());
+        sceneMap.put("prep", createBoatPlaceScene());
+        primaryStage.setScene(sceneMap.get("prep"));
+    }
+
+    private void gamePlay(Stage primaryStage) {
+        currTurn = new Text("It's Your Turn!");
+        currTurn.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+
+        remainingBoats = 5;
+        remainingEnemy = new Text("Remaining Enemy Boats: " + remainingBoats);
+        remainingEnemy.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+
+        hitButton = new Button("Hit!");
+        hitButton.setAlignment(Pos.CENTER);
+        styleButton(hitButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
+        hitButton.setOnAction(e -> {
+            if (currChosenCell == null) {
+                return;
+            }
+            int col = GridPane.getColumnIndex(currChosenCell);
+            int row = GridPane.getRowIndex(currChosenCell);
+
+//            Message message = new Message();
+//            message.cells = new ArrayList<>();
+//
+//            message.cells.add(col);
+//            message.cells.add(row);
+            if (gameBox.getChildren().contains(enemyBoatPane)) {
+                gameBox.getChildren().remove(0);
+                gameBox.getChildren().add(0, playerBoatPane);
+            }
+            else {
+                gameBox.getChildren().remove(0);
+                gameBox.getChildren().add(0, enemyBoatPane);
+            }
+
+            currChosenCell.setFill(Color.ORANGE);
+            currChosenCell = null;
+        });
+
+        enemyBoatPane = new GridPane();
+        enemyBoatPane.setAlignment(Pos.CENTER);
+
+        // Add row labels (1 to 10)
+        for (int col = 0; col < numColumns; col++) {
+            Label colLabel = new Label(Integer.toString(col + 1));
+            colLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+            colLabel.setMinSize(cellSize, cellSize);
+            colLabel.setAlignment(Pos.CENTER);
+            enemyBoatPane.add(colLabel, col + 1, 0); // Offset by one for the column labels
+        }
+
+        // Add column labels (A to J)
+        char rowChar = 'A';
+        for (int row = 0; row < numRows; row++) {
+            Label rowLabel = new Label(String.valueOf((char)(rowChar + row)));
+            rowLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
+            rowLabel.setMinSize(cellSize, cellSize);
+            rowLabel.setAlignment(Pos.CENTER);
+            enemyBoatPane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
+        }
+
+        // Populate the grid
+        for (int row = 1; row <= numRows; row++) {
+            for (int col = 1; col <= numColumns; col++) {
+                Rectangle cell = new Rectangle(cellSize, cellSize);
+                cell.setStroke(Color.BLACK);
+                cell.setFill(Color.TRANSPARENT);
+                cell.setUserData(true);
+                int finalRow = row; // Adjust for zero-based index
+                int finalCol = col; // Adjust for zero-based index
+                cell.setOnMouseClicked(event -> {
+                    if (currChosenCell != null) {
+                        currChosenCell.setFill(Color.TRANSPARENT);
+                    }
+                    currChosenCell = (Rectangle) getNodeFromGridPane(enemyBoatPane, finalCol, finalRow);
+                    currChosenCell.setFill(Color.BLACK);
+                });
+                enemyBoatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
+            }
+        }
+
+        sceneMap.put("game", createGamePlayScene());
         primaryStage.setScene(sceneMap.get("game"));
+    }
+
+    private Scene createGamePlayScene() {
+        topTextBox = new VBox(15, currTurn, remainingEnemy);
+        topTextBox.setAlignment(Pos.CENTER);
+        topTextBox.setPadding(new Insets(10));
+
+        gameBox = new VBox(enemyBoatPane);
+
+
+        BorderPane pane = new BorderPane();
+        pane.setPadding(new Insets( 20));
+        pane.setStyle("-fx-background-color: grey");
+        BorderPane.setAlignment(hitButton, Pos.CENTER);
+
+        pane.setTop(topTextBox);
+        pane.setCenter(gameBox);
+        pane.setBottom(hitButton);
+
+        return new Scene(pane, 700, 700);
     }
 
     private void placeShip(int row, int col) {
@@ -317,7 +420,7 @@ public class GuiClient extends Application{
             }
 
             for (int i = 0; i < shipSize; i++) {
-                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col + i, row);
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, col + i, row);
                 if(targetCell.getUserData().equals(false)) {
                     error.setText("Merge with another ship");
                     return;
@@ -334,7 +437,7 @@ public class GuiClient extends Application{
                 else {
                     addImageToGridPane(boatImages[1], col + i, row);
                 }
-                getNodeFromGridPane(boatPane, col + i, row).setUserData(false);
+                getNodeFromGridPane(playerBoatPane, col + i, row).setUserData(false);
             }
         // Vertical placement
         } else if(currentOrientation.equals("Vertical")){
@@ -344,7 +447,7 @@ public class GuiClient extends Application{
                 return;
             }
             for (int i = 0; i < shipSize; i++) {
-                Rectangle targetCell = (Rectangle) getNodeFromGridPane(boatPane, col, row + i);
+                Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, col, row + i);
                 if(targetCell.getUserData().equals(false)) {
                     error.setText("Merge with another ship");
                     return;
@@ -360,7 +463,7 @@ public class GuiClient extends Application{
                 else {
                     addImageToGridPane(boatImages[4], col, row + i);
                 }
-                getNodeFromGridPane(boatPane, col, row + i).setUserData(false);
+                getNodeFromGridPane(playerBoatPane, col, row + i).setUserData(false);
             }
         }
 
@@ -460,7 +563,7 @@ public class GuiClient extends Application{
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
-    public void addImageToGridPane(String imagePath, int column, int row) {
+    private void addImageToGridPane(String imagePath, int column, int row) {
         // Create an image object
         Image image = new Image(imagePath);
 
@@ -472,6 +575,6 @@ public class GuiClient extends Application{
         imageView.setPreserveRatio(true);
 
         // Add the ImageView to the gridpane at the specified column and row
-        boatPane.add(imageView, column, row);
+        playerBoatPane.add(imageView, column, row);
     }
 }
