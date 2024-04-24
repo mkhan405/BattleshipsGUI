@@ -21,19 +21,20 @@ public class GuiClient extends Application{
     private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
-    private TextField nameTextField;
-    private HBox buttonBox, middleSetupBox;
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox;
+    private TextField nameTextField, messageField = new TextField();
+    private HBox buttonBox, middleHBox = new HBox(50);
+    ListView<String> chatLog = new ListView<>();
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog,messageField);
     private Message client = new Message();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
-    private String currentOrientation = null, username, enemyUsername = null, sessionID;
-    private int remainingBoats = 5;
+    private String currentOrientation = null, username, opponent, sessionID = null, firstPlayer, secondPlayer;
+    private int remainingBoats = 5, boatSize;
     private Rectangle currChosenCell = null;
-    private boolean isP1;
     private ArrayList<ArrayList<Integer>> boatCells, chosenCell;
+
     private String[] boatImages = {
             "shiphead.png",
             "shipmiddle.png",
@@ -49,78 +50,83 @@ public class GuiClient extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         clientConnection = new Client(data->
-            Platform.runLater(()->{
-                if (data instanceof Message) {
-                    Message message = (Message) data;
+                Platform.runLater(()->{
+                    if (data instanceof Message) {
+                        Message message = (Message) data;
 
-                    switch (message.type) {
-                        case "user_registered":  // New user has joined the server
-//                            messages.add(message);
-                            choose.setText("Play with another player or with the AI");
-                            welcomeBox.getChildren().remove(nameTextField);
-                            welcomeBox.getChildren().add(buttonBox);
-                            nameError.setText("");
-                            break;
-                        case "registration_error":  // username already exists
-                            nameError.setText("Username already exists! Choose a different username");
-                            break;
-                        case "wait_for_opponent":
-                            choose.setText("Waiting for opponent...");
-                            break;
-                        case "start_session":
-                            String[] tempStrArr = message.content.split(";");
-                            sessionID = tempStrArr[0];
-                            String p1 = tempStrArr[1].split("=")[1];
-                            String p2 = tempStrArr[2].split("=")[1];
-                            if (p1.equals(username)) {
-                                enemyUsername = p2;
-                                isP1 = true;
-                            }
-                            else {
-                                enemyUsername = p1;
-                                isP1 = false;
-                            }
-                            boatPlace(primaryStage);
-                            break;
-                        case "start_AI_session":
-                            sessionID = message.content.split(";")[0];
-                            boatPlace(primaryStage);
-                            break;
-                        case "wait_for_other_player_boats":
-                            error.setText("Waiting for opponent...");
-                            break;
-                        case "start_game":
-                            gamePlay(primaryStage);
-                            break;
-                        case "hit":
-                            currChosenCell.setFill(Color.ORANGE);
-                            try {Thread.sleep(2000);} catch (InterruptedException ex) {}
-                            gameBox.getChildren().clear();
-                            gameBox.getChildren().add(playerBoatPane);
-                            currChosenCell = null;
-                            break;
-                        case "miss":
-                            currChosenCell.setFill(Color.DARKGRAY);
-                            try {Thread.sleep(2000);} catch (InterruptedException ex) {}
-                            gameBox.getChildren().clear();
-                            gameBox.getChildren().add(playerBoatPane);
-                            currChosenCell = null;
-                            break;
-                        case "sink":
-                            ArrayList<Integer> sinkCell = message.cells.get(0);
-                            Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0), sinkCell.get(1));
-                            System.out.println(sinkCell.get(0));
-                            System.out.println(sinkCell.get(1));
-                            targetCell.setFill(Color.INDIANRED);
-                        case "continue":
-                            try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+                        switch (message.type) {
+                            case "user_registered":  // New user has joined the server
+//                                messages.add(message);
+                                choose.setText("Play with another player or with the AI");
+                                welcomeBox.getChildren().remove(nameTextField);
+                                welcomeBox.getChildren().add(buttonBox);
+                                nameError.setText("");
+                                break;
+                            case "registration_error":  // username already exists
+                                nameError.setText("Username already exists! Choose a different username");
+                                break;
+                            case "wait_for_opponent":
+                                choose.setText("Waiting for opponent");
+                                break;
+                            case "start_session":
+                                sessionID = message.content;
 
-                            gameBox.getChildren().clear();
-                            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
-                            break;
+                                firstPlayer = sessionID.substring(sessionID.indexOf("p1=") + "p1=".length(), sessionID.indexOf("p2=") - 1);
+                                secondPlayer = sessionID.substring(sessionID.indexOf("p2=") + "p2=".length());
+
+                                sessionID = message.content.split(";")[0];
+
+                                if (firstPlayer.equals(username)) {
+                                    opponent = secondPlayer;
+                                } else {
+                                    opponent = firstPlayer;
+                                }
+
+                                boatPlace(primaryStage);
+                                break;
+                            case "indiv_message_ok":
+                                chatLog.getItems().add(message.username + " to you: " + message.content);
+                                break;
+                            case "start_AI_session":
+                                sessionID = message.content.split(";")[0];
+                                boatPlace(primaryStage);
+                                break;
+                            case "wait_for_other_player_boats":
+                                error.setText("Waiting for opponent...");
+                                break;
+                            case "start_game":
+                                gamePlay(primaryStage);
+                                break;
+                            case "hit":
+                                currChosenCell.setFill(Color.ORANGE);
+                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+                                gameBox.getChildren().clear();
+                                gameBox.getChildren().add(playerBoatPane);
+                                currChosenCell = null;
+                                break;
+                            case "miss":
+                                currChosenCell.setFill(Color.DARKGRAY);
+                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+                                gameBox.getChildren().clear();
+                                gameBox.getChildren().add(playerBoatPane);
+                                currChosenCell = null;
+                                break;
+                            case "sink":
+                                ArrayList<Integer> sinkCell = message.cells.get(0);
+                                Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0), sinkCell.get(1));
+                                System.out.println(sinkCell.get(0));
+                                System.out.println(sinkCell.get(1));
+                                targetCell.setFill(Color.INDIANRED);
+                            case "continue":
+                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+
+                                gameBox.getChildren().clear();
+                                gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+                                break;
+                        }
+
                     }
-                }
-            })
+                })
         );
 
         clientConnection.start();
@@ -160,11 +166,13 @@ public class GuiClient extends Application{
 
         onlineButton.setOnAction(e -> {
             clientConnection.send(new Message("request_session","multiplayer",nameTextField.getText()));
+            welcomeBox.getChildren().remove(buttonBox);
         });
 
         botButton.setOnAction(e -> {
             clientConnection.send(new Message("request_session","AI",nameTextField.getText()));
         });
+
 
 
         nameTextField.setOnAction(e->{
@@ -198,10 +206,26 @@ public class GuiClient extends Application{
         orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
-        middleSetupBox = new HBox(100, playerBoatPane, boatSelectBox);
-        middleSetupBox.setAlignment(Pos.CENTER);
+        messageField.setOnAction(e->{
+            String content = messageField.getText();
+            clientConnection.send(new Message("indiv_messsage", content, username, opponent));
+            chatLog.getItems().add("You to " + opponent + ": " + content);
+            messageField.setText("");
+        });
 
-        mainVBox = new VBox(75, prompt, middleSetupBox, error);
+        chatLog.setStyle("-fx-background-insets: 0; -fx-padding: 5; -fx-border-insets: 0; -fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #e0e0e0; -fx-border-width: 1;");
+
+
+        middleHBox.getChildren().add(playerBoatPane);
+        middleHBox.getChildren().add(boatSelectBox);
+        if(sessionID != null) {
+            middleHBox.getChildren().add(chatBox);
+        }
+
+//        middleHBox = new HBox(50, playerBoatPane, boatSelectBox,  chatBox);
+        middleHBox.setAlignment(Pos.CENTER);
+
+        mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
 
         BorderPane pane = new BorderPane(mainVBox);
@@ -220,13 +244,14 @@ public class GuiClient extends Application{
         selectedShip = ship;
         ship.setDisable(true);
 
+        boatSize = (int) selectedShip.getUserData();
+
         selected.setText("Selected: " + ship.getText().split(" - ")[0]);
         requiredBlocks.setText("Required Blocks: " + ship.getUserData());
 
-        middleSetupBox.getChildren().remove(1);
-        middleSetupBox.getChildren().add(1, orientationBox);
+        middleHBox.getChildren().remove(1);
+        middleHBox.getChildren().add(1, orientationBox);
     }
-
 
     private void boatPlace(Stage primaryStage) {
         prompt = new Text("Place Your Boats, " + username);
@@ -274,7 +299,7 @@ public class GuiClient extends Application{
         styleRectangleButton(horizontalButton);
         styleButton(confirmButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
         confirmButton.setOnAction(e -> {
-            if (enemyUsername == null || isP1) {
+            if (firstPlayer.equals(username)) {
                 clientConnection.send(new Message("p1_boats", sessionID, username, boatCells));
             }
             else {
@@ -345,11 +370,11 @@ public class GuiClient extends Application{
         chosenCell = new ArrayList<>();
 
         currTurn = new Text("It's Your Turn!");
-        currTurn.setStyle("-fx-font-size: 25; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
+        currTurn.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         remainingBoats = 5;
         remainingEnemy = new Text("Remaining Enemy Boats: " + remainingBoats);
-        remainingEnemy.setStyle("-fx-font-size: 25; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
+        remainingEnemy.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         hitButton = new Button("Hit!");
         hitButton.setAlignment(Pos.CENTER);
@@ -421,8 +446,7 @@ public class GuiClient extends Application{
         topTextBox.setAlignment(Pos.CENTER);
         topTextBox.setPadding(new Insets(10));
 
-        gameBox = new VBox(45, enemyBoatPane, hitButton);
-        gameBox.setAlignment(Pos.CENTER);
+        gameBox = new VBox(enemyBoatPane);
 
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
@@ -431,6 +455,7 @@ public class GuiClient extends Application{
 
         pane.setTop(topTextBox);
         pane.setCenter(gameBox);
+        pane.setBottom(hitButton);
 
         return new Scene(pane, 700, 700);
     }
@@ -484,7 +509,7 @@ public class GuiClient extends Application{
                 newBoatCells.add(row);
                 boatCells.add(newBoatCells);
             }
-        // Vertical placement
+            // Vertical placement
         } else if(currentOrientation.equals("Vertical")){
             // Ship doesn't fit
             if (row + shipSize > numRows+1) {
@@ -529,8 +554,8 @@ public class GuiClient extends Application{
         orientationSelected.setText("Orientation Selected");
         error.setText("");
 
-        middleSetupBox.getChildren().remove(1);
-        middleSetupBox.getChildren().add(1, boatSelectBox);
+        middleHBox.getChildren().remove(1);
+        middleHBox.getChildren().add(1, boatSelectBox);
 
         if (remainingBoats == 0) {
             boatSelectBox.getChildren().add(confirmButton);
@@ -629,5 +654,23 @@ public class GuiClient extends Application{
 
         // Add the ImageView to the gridpane at the specified column and row
         playerBoatPane.add(imageView, column, row);
+    }
+
+    private void removeImageFromGridPane(GridPane gridPane, int column, int row) {
+        Node nodeToRemove = null;
+        for (Node node : gridPane.getChildren()) {
+            // Check the node's column and row position
+            if (GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null
+                    && GridPane.getColumnIndex(node) == column && GridPane.getRowIndex(node) == row) {
+                if (node instanceof ImageView) { // Additional check if you only want to remove ImageViews
+                    nodeToRemove = node;
+                    break;
+                }
+            }
+        }
+
+        if (nodeToRemove != null) {
+            gridPane.getChildren().remove(nodeToRemove); // Remove the node from the grid
+        }
     }
 }
