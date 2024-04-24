@@ -15,6 +15,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.scene.text.Text;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 public class GuiClient extends Application{
     private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingEnemy;
@@ -82,7 +84,16 @@ public class GuiClient extends Application{
                                     opponent = firstPlayer;
                                 }
 
-                                boatPlace(primaryStage);
+                                Text t1 = new Text("Your opponent is " + opponent);
+                                t1.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
+                                welcomeBox.getChildren().add(t1);
+
+                                PauseTransition pause = new PauseTransition(Duration.seconds(2));
+                                pause.setOnFinished(event -> {
+                                    boatPlace(primaryStage);
+                                });
+                                pause.play();
+
                                 break;
                             case "indiv_message_ok":
                                 chatLog.getItems().add(message.username + " to you: " + message.content);
@@ -319,6 +330,7 @@ public class GuiClient extends Application{
             else {
                 clientConnection.send(new Message("p2_boats", sessionID, username, boatCells));
             }
+            confirmButton.setDisable(true);
         });
 
 
@@ -587,8 +599,6 @@ public class GuiClient extends Application{
     }
 
     private void styleRectangleButton(Button button){
-//        int buttonX = 120;
-//        int buttonY = 40;
 
         button.setStyle("-fx-font-size: 14px; " +
                 "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
@@ -616,14 +626,6 @@ public class GuiClient extends Application{
                 "-fx-border-radius: 20; " +
                 "-fx-background-radius: 20; " +
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
-
-//        button.setStyle("-fx-font-size: 14; -fx-background-insets: 0; -fx-padding: 0; -fx-text-fill: black; -fx-font-family: Arial;");
-//        button.setPrefWidth(buttonX);
-//        button.setPrefHeight(buttonY);
-//
-//        Rectangle rectangle = new Rectangle(buttonX, buttonY);
-//        button.setShape(rectangle);
-//        button.setPadding(new Insets(10));
     }
 
     private void styleButton(Button button, String baseColor, String hoverColor) {
