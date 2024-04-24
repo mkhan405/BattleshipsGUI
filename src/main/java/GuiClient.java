@@ -100,38 +100,67 @@ public class GuiClient extends Application{
                             case "hit":
                                 currChosenCell.setFill(Color.ORANGE);
                                 currChosenCell.setDisable(true);
+                                currChosenCell = null;
+
+                                if (opponent != null) {
+                                    currTurn.setText("It's " + opponent + " Turn!");
+                                }
+                                else {
+                                    currTurn.setText("It's the AI's Turn.");
+                                }
+
+                                System.out.println("It was a hit!");
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+
                                 gameBox.getChildren().clear();
                                 gameBox.getChildren().add(playerBoatPane);
-                                currChosenCell = null;
+
                                 break;
                             case "miss":
                                 currChosenCell.setFill(Color.BLACK);
                                 currChosenCell.setDisable(true);
+                                currChosenCell = null;
+
+                                if (opponent != null) {
+                                    currTurn.setText("It's " + opponent + " Turn!");
+                                }
+                                else {
+                                    currTurn.setText("It's the AI's Turn.");
+                                }
+
+
+                                System.out.println("It was a miss.");
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+
                                 gameBox.getChildren().clear();
                                 gameBox.getChildren().add(playerBoatPane);
-                                currChosenCell = null;
+
                                 break;
                             case "sink":
-                                ArrayList<Integer> sinkCell = message.cells.get(0);
-                                Rectangle targetSinkCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0), sinkCell.get(1));
-                                System.out.println(sinkCell.get(0));
-                                System.out.println(sinkCell.get(1));
-                                targetSinkCell.setFill(Color.INDIANRED);
-//                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
-//
-//                                gameBox.getChildren().clear();
-//                                gameBox.getChildren().addAll(enemyBoatPane, hitButton);
-//                                break;
-                            case "continue":
-//                                ArrayList<Integer> missCell = message.cells.get(0);
-//                                Rectangle targetMissCell = (Rectangle) getNodeFromGridPane(playerBoatPane, missCell.get(0), missCell.get(1));
-//                                System.out.println(missCell.get(0));
-//                                System.out.println(missCell.get(1));
-//                                targetMissCell.setFill(Color.DARKGRAY);
+                                ArrayList<ArrayList<Integer>> sinkCell = message.cells;
+                                Rectangle targetSinkCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0).get(0), sinkCell.get(0).get(1));
 
-//                                currChosenCell.setFill(Color.BLACK);
+                                System.out.println("The opponent hit at X: " + sinkCell.get(0).get(0));
+                                System.out.println("The opponent hit at Y: " + sinkCell.get(0).get(1));
+
+                                targetSinkCell.setFill(Color.INDIANRED);
+                                currTurn.setText("Its Your Turn!");
+
+                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+
+                                gameBox.getChildren().clear();
+                                gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+                                break;
+                            case "continue":
+                                ArrayList<ArrayList<Integer>> missCell = message.cells;
+                                Rectangle targetMissCell = (Rectangle) getNodeFromGridPane(playerBoatPane, missCell.get(0).get(0), missCell.get(0).get(1));
+
+                                System.out.println("The opponent missed at X: " + missCell.get(0).get(0));
+                                System.out.println("The opponent missed at Y: " + missCell.get(0).get(1));
+
+                                targetMissCell.setFill(Color.BLACK);
+                                currTurn.setText("Its Your Turn!");
+
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
 
                                 gameBox.getChildren().clear();
@@ -406,6 +435,9 @@ public class GuiClient extends Application{
             tempChosenCell.add(row);
             chosenCell.add(tempChosenCell);
 
+            System.out.println("You hit X: " + col);
+            System.out.println("You hit Y: " + row);
+
             clientConnection.send(new Message("turn", sessionID, username, chosenCell));
         });
 
@@ -460,7 +492,21 @@ public class GuiClient extends Application{
         topTextBox.setAlignment(Pos.CENTER);
         topTextBox.setPadding(new Insets(10));
 
-        gameBox = new VBox(enemyBoatPane);
+        gameBox = new VBox();
+
+        if (opponent == null || firstPlayer.equals(username)) {
+            gameBox.getChildren().add(enemyBoatPane);
+            gameBox.getChildren().add(hitButton);
+        }
+        else {
+            if (opponent != null) {
+                currTurn.setText("It's " + opponent + " Turn!");
+            }
+            else {
+                currTurn.setText("It's the AI's Turn.");
+            }
+            gameBox.getChildren().add(playerBoatPane);
+        }
 
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
@@ -469,7 +515,6 @@ public class GuiClient extends Application{
 
         pane.setTop(topTextBox);
         pane.setCenter(gameBox);
-        pane.setBottom(hitButton);
 
         return new Scene(pane, 700, 700);
     }
