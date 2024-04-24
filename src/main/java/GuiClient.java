@@ -24,13 +24,13 @@ public class GuiClient extends Application{
     private TextField nameTextField, messageField = new TextField();
     private HBox buttonBox, middleHBox = new HBox(50);
     ListView<String> chatLog = new ListView<>();
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog,messageField);
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
     private Message client = new Message();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
-    private String currentOrientation = null, username, opponent, sessionID = null, firstPlayer, secondPlayer;
+    private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
     private int remainingBoats = 5, boatSize;
     private Rectangle currChosenCell = null;
     private ArrayList<ArrayList<Integer>> boatCells, chosenCell;
@@ -99,13 +99,15 @@ public class GuiClient extends Application{
                                 break;
                             case "hit":
                                 currChosenCell.setFill(Color.ORANGE);
+                                currChosenCell.setDisable(true);
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
                                 gameBox.getChildren().clear();
                                 gameBox.getChildren().add(playerBoatPane);
                                 currChosenCell = null;
                                 break;
                             case "miss":
-                                currChosenCell.setFill(Color.DARKGRAY);
+                                currChosenCell.setFill(Color.BLACK);
+                                currChosenCell.setDisable(true);
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
                                 gameBox.getChildren().clear();
                                 gameBox.getChildren().add(playerBoatPane);
@@ -113,11 +115,23 @@ public class GuiClient extends Application{
                                 break;
                             case "sink":
                                 ArrayList<Integer> sinkCell = message.cells.get(0);
-                                Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0), sinkCell.get(1));
+                                Rectangle targetSinkCell = (Rectangle) getNodeFromGridPane(playerBoatPane, sinkCell.get(0), sinkCell.get(1));
                                 System.out.println(sinkCell.get(0));
                                 System.out.println(sinkCell.get(1));
-                                targetCell.setFill(Color.INDIANRED);
+                                targetSinkCell.setFill(Color.INDIANRED);
+//                                try {Thread.sleep(2000);} catch (InterruptedException ex) {}
+//
+//                                gameBox.getChildren().clear();
+//                                gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+//                                break;
                             case "continue":
+//                                ArrayList<Integer> missCell = message.cells.get(0);
+//                                Rectangle targetMissCell = (Rectangle) getNodeFromGridPane(playerBoatPane, missCell.get(0), missCell.get(1));
+//                                System.out.println(missCell.get(0));
+//                                System.out.println(missCell.get(1));
+//                                targetMissCell.setFill(Color.DARKGRAY);
+
+//                                currChosenCell.setFill(Color.BLACK);
                                 try {Thread.sleep(2000);} catch (InterruptedException ex) {}
 
                                 gameBox.getChildren().clear();
@@ -218,7 +232,7 @@ public class GuiClient extends Application{
 
         middleHBox.getChildren().add(playerBoatPane);
         middleHBox.getChildren().add(boatSelectBox);
-        if(sessionID != null) {
+        if(opponent != null) {
             middleHBox.getChildren().add(chatBox);
         }
 
@@ -299,7 +313,7 @@ public class GuiClient extends Application{
         styleRectangleButton(horizontalButton);
         styleButton(confirmButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
         confirmButton.setOnAction(e -> {
-            if (firstPlayer.equals(username)) {
+            if (opponent == null || firstPlayer.equals(username)) {
                 clientConnection.send(new Message("p1_boats", sessionID, username, boatCells));
             }
             else {
