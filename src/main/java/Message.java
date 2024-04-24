@@ -6,7 +6,9 @@ public class Message implements Serializable {
     String type;
     String content;
     String username;
-    ArrayList<ArrayList<Integer>> cells;
+    String recipient;
+
+    ArrayList<Integer> cells;
 
     Message(String type, String content) {
         this.type = type;
@@ -19,11 +21,18 @@ public class Message implements Serializable {
         this.username = username;
     }
 
-    Message(String type, String content, String username, ArrayList<ArrayList<Integer>> cells) {
+    Message(String type, String content, String username, ArrayList<Integer> cells) {
         this.type = type;
         this.content = content;
         this.username = username;
         this.cells = cells;
+    }
+
+    public Message(String type, String content, String msgSender, String msgRecipient) { // individual message
+        this.type = type;
+        this.content = content;
+        this.username = msgSender;
+        this.recipient = msgRecipient;
     }
 
     public Message() {

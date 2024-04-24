@@ -18,20 +18,24 @@ import javafx.scene.text.Text;
 
 public class GuiClient extends Application{
     private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingEnemy;
-    private Button onlineButton, botButton, backButton, verticalButton, horizontalButton, confirmButton, hitButton;
+    private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
-    private TextField nameTextField;
-    private HBox buttonBox, middleHBox;
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox;
+    private TextField nameTextField, messageField = new TextField();
+    private HBox buttonBox, middleHBox = new HBox(50);
+    ListView<String> chatLog = new ListView<>();
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox =new VBox(10, chatLog,messageField);;
     private Message client = new Message();
     private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
-    private String currentOrientation = null, username;
-    private int remainingBoats = 5;
+    private String currentOrientation = null, username, opponent, sessionID = null, firstPlayer, secondPlayer;
+    private int remainingBoats = 5, boatSize;
     private Rectangle currChosenCell = null;
+
+
+
     private String[] boatImages = {
             "shiphead.png",
             "shipmiddle.png",
@@ -67,7 +71,28 @@ public class GuiClient extends Application{
                         choose.setText("Waiting for opponent");
                     }
                     else if(message.type.equals("start_session")){
+                        sessionID = message.content;
+
+//                        middleHBox.getChildren().add(chatBox);
+
+
+                        firstPlayer = sessionID.substring(sessionID.indexOf("p1=") + "p1=".length(), sessionID.indexOf("p2=")-1);
+                        secondPlayer = sessionID.substring(sessionID.indexOf("p2=") + "p2=".length());
+
+//                        System.out.println(firstPlayer);
+//                        System.out.println(secondPlayer);
+
+                        if(firstPlayer.equals(username)) {
+                            opponent = secondPlayer;
+                        }
+                        else{
+                            opponent = firstPlayer;
+                        }
+
                         boatPlace(primaryStage);
+                    }
+                    else if("indiv_message_ok".equals(message.type)) {
+                        chatLog.getItems().add(message.username + " to you: " + message.content);
                     }
                     else if(message.type.equals("start_AI_session")){
                         boatPlace(primaryStage);
@@ -108,37 +133,19 @@ public class GuiClient extends Application{
         botButton = new Button("AI");
         styleButton(botButton, "linear-gradient(#f0bf2b, #d4a004)", "linear-gradient(#f7e35c, #edd428)");
 
-        backButton = new Button("Back");
-        styleButton(backButton, "linear-gradient(#ff5252, #c50e29)", "linear-gradient(#ff8a80, #ff5252)");
-
         nameTextField = new TextField();
         nameTextField.setMaxWidth(300);
         nameTextField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
 
         onlineButton.setOnAction(e -> {
             clientConnection.send(new Message("request_session","multiplayer",nameTextField.getText()));
-//            choose.setText("You're playing online! What's your username?");
-//            buttonBox.getChildren().clear();
-//            buttonBox.getChildren().add(backButton);
-//            welcomeBox.getChildren().add(1, nameTextField);
+            welcomeBox.getChildren().remove(buttonBox);
         });
 
         botButton.setOnAction(e -> {
             clientConnection.send(new Message("request_session","AI",nameTextField.getText()));
-//            choose.setText("You're playing with the AI! What's your username?");
-//            buttonBox.getChildren().clear();
-//            buttonBox.getChildren().add(backButton);
-//            welcomeBox.getChildren().add(1, nameTextField);
         });
 
-//        backButton.setOnAction(e -> {
-//            choose.setText("Play with another player or with the AI");
-//            welcomeBox.getChildren().remove(nameTextField);
-//            buttonBox.getChildren().clear();
-//            buttonBox.getChildren().add(onlineButton);
-//            buttonBox.getChildren().add(botButton);
-//            nameError.setText("");
-//        });
 
 
         nameTextField.setOnAction(e->{
@@ -172,7 +179,23 @@ public class GuiClient extends Application{
         orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
-        middleHBox = new HBox(100, playerBoatPane, boatSelectBox);
+        messageField.setOnAction(e->{
+            String content = messageField.getText();
+            clientConnection.send(new Message("indiv_messsage", content, username, opponent));
+            chatLog.getItems().add("You to " + opponent + ": " + content);
+            messageField.setText("");
+        });
+
+        chatLog.setStyle("-fx-background-insets: 0; -fx-padding: 5; -fx-border-insets: 0; -fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #e0e0e0; -fx-border-width: 1;");
+
+
+        middleHBox.getChildren().add(playerBoatPane);
+        middleHBox.getChildren().add(boatSelectBox);
+        if(sessionID != null) {
+            middleHBox.getChildren().add(chatBox);
+        }
+
+//        middleHBox = new HBox(50, playerBoatPane, boatSelectBox,  chatBox);
         middleHBox.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
@@ -194,13 +217,14 @@ public class GuiClient extends Application{
         selectedShip = ship;
         ship.setDisable(true);
 
+        boatSize = (int) selectedShip.getUserData();
+
         selected.setText("Selected: " + ship.getText().split(" - ")[0]);
         requiredBlocks.setText("Required Blocks: " + ship.getUserData());
 
         middleHBox.getChildren().remove(1);
         middleHBox.getChildren().add(1, orientationBox);
     }
-
 
     private void boatPlace(Stage primaryStage) {
         prompt = new Text("Place Your Boats, " + username);
@@ -396,7 +420,6 @@ public class GuiClient extends Application{
 
         gameBox = new VBox(enemyBoatPane);
 
-
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: grey");
@@ -589,5 +612,23 @@ public class GuiClient extends Application{
 
         // Add the ImageView to the gridpane at the specified column and row
         playerBoatPane.add(imageView, column, row);
+    }
+
+    private void removeImageFromGridPane(GridPane gridPane, int column, int row) {
+        Node nodeToRemove = null;
+        for (Node node : gridPane.getChildren()) {
+            // Check the node's column and row position
+            if (GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null
+                    && GridPane.getColumnIndex(node) == column && GridPane.getRowIndex(node) == row) {
+                if (node instanceof ImageView) { // Additional check if you only want to remove ImageViews
+                    nodeToRemove = node;
+                    break;
+                }
+            }
+        }
+
+        if (nodeToRemove != null) {
+            gridPane.getChildren().remove(nodeToRemove); // Remove the node from the grid
+        }
     }
 }
