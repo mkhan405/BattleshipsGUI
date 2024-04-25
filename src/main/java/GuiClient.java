@@ -300,9 +300,6 @@ public class GuiClient extends Application{
 
         clientConnection.start();
 
-        chatBox.setAlignment(Pos.CENTER);
-
-
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
@@ -646,65 +643,43 @@ public class GuiClient extends Application{
     }
 
     private Scene createGamePlayScene() {
-        topTextBox = new VBox(15, currTurn);
         // Top text box settings
-        topTextBox = new VBox(15);
+        topTextBox = new VBox(15, currTurn);
         topTextBox.setAlignment(Pos.CENTER);
-        topTextBox.setPadding(new Insets(10, 50, 10, 50)); // Add padding to left and right to center the content
-
-        // Add children to topTextBox
-        topTextBox.getChildren().addAll(currTurn, remainingEnemy);
+        topTextBox.setPadding(new Insets(10, 0, 50, 0));
 
         // Main game box settings
-        gameBox = new VBox(25);
-        gameBox.setAlignment(Pos.CENTER);
-        gameBox.setPadding(new Insets(0, 20, 0, 20)); // Add padding to left and right
+        gameBox = new VBox(100);
 
-        if (opponent == null || firstPlayer.equals(username)) {
+        // Button box settings
+        gameButtonBox = new HBox(20, hitButton);
+        gameButtonBox.setAlignment(Pos.CENTER);
+
+        // If the player is playing against the AI
+        if (opponent == null) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
-            if (opponent != null) {
-                topTextBox.getChildren().add(remainingOpponent);
-            }
-            else {
-                topTextBox.getChildren().add(remainingPlayer);
-            }
-        HHH = new HBox(10);
-
-        // Set the current turn text appropriately
-        if (opponent == null ) {
-            currTurn.setText("It's Your Turn!");
-            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
-            HHH.getChildren().add(gameBox);
-        }
-        else if(firstPlayer.equals(username)) {
-            currTurn.setText("It's Your Turn!");
-            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
-            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
+            topTextBox.getChildren().add(remainingPlayer);
+        } // If the current player gets to play first
+        else if (firstPlayer.equals(username)) {
+            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            topTextBox.getChildren().add(remainingOpponent);
         }
         else {
-            currTurn.setText(opponent != null ? "It's " + opponent + "'s Turn!" : "It's the AI's Turn.");
+            currTurn.setText("It's " + opponent + " Turn!");
             gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
-            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
         }
-        chatBox.setAlignment(Pos.CENTER);
 
-        // Assuming HHH is an HBox with horizontal layout
-//        HHH = new HBox(10);
-        HHH.setAlignment(Pos.CENTER); // Center the content in HBox
-        HHH.setPadding(new Insets(10)); // Uniform padding
-//        HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
-
-        // Main border pane settings
         BorderPane pane = new BorderPane();
-        pane.setPadding(new Insets(20)); // Padding for the border pane
+        pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: grey");
+        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
 
-        // Set top and center alignment
         pane.setTop(topTextBox);
-        BorderPane.setAlignment(topTextBox, Pos.CENTER);
-        pane.setCenter(HHH);
-        BorderPane.setAlignment(HHH, Pos.CENTER);
+        pane.setCenter(gameBox);
+        if (opponent != null) {
+            pane.setRight(chatBox);
+        }
 
         // Return the scene
         return new Scene(pane, 900, 700);
