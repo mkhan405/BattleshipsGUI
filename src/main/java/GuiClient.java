@@ -132,20 +132,7 @@ public class GuiClient extends Application{
 
                                 System.out.println("It was a hit!");
                                 playerEndTurnPause = new PauseTransition(Duration.seconds(2));
-                                playerEndTurnPause.setOnFinished(event -> {
-                                    if (opponent != null) {
-                                        currTurn.setText("It's " + opponent + "'s Turn!");
-                                        topTextBox.getChildren().remove(remainingOpponent);
-                                        topTextBox.getChildren().add(remainingPlayer);
-                                    }
-                                    else {
-                                        currTurn.setText("It's the AI's Turn.");
-                                    }
-
-                                    gameBox.getChildren().clear();
-                                    gameBox.getChildren().add(playerBoatPane); // Change Pane after the pause
-                                });
-
+                                playerEndTurnEvent();
                                 playerEndTurnPause.play(); // Start the delay
                                 break;
                             case "miss":
@@ -155,20 +142,7 @@ public class GuiClient extends Application{
 
                                 System.out.println("It was a miss.");
                                 playerEndTurnPause = new PauseTransition(Duration.seconds(2));
-                                playerEndTurnPause.setOnFinished(event -> {
-                                    if (opponent != null) {
-                                        currTurn.setText("It's " + opponent + "'s Turn!");
-                                        topTextBox.getChildren().remove(remainingOpponent);
-                                        topTextBox.getChildren().add(remainingPlayer);
-                                    }
-                                    else {
-                                        currTurn.setText("It's the AI's Turn.");
-                                    }
-
-                                    gameBox.getChildren().clear();
-                                    gameBox.getChildren().add(playerBoatPane); // Change Pane after the pause
-                                });
-
+                                playerEndTurnEvent();
                                 playerEndTurnPause.play(); // Start the delay
                                 break;
                             case "sink":
@@ -203,16 +177,7 @@ public class GuiClient extends Application{
                                 }
 
                                 opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
-                                opponentEndTurnPause.setOnFinished(event -> {
-                                    if (opponent != null) {
-                                        topTextBox.getChildren().remove(remainingPlayer);
-                                        topTextBox.getChildren().add(remainingOpponent);
-                                    }
-                                    currTurn.setText("Its Your Turn!");
-                                    gameBox.getChildren().clear();
-                                    gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
-                                });
-
+                                opponentEndTurnEvent();
                                 opponentEndTurnPause.play();
                                 break;
                             case "continue":
@@ -225,16 +190,7 @@ public class GuiClient extends Application{
                                 targetMissCell.setFill(Color.BLACK);
 
                                 opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
-                                opponentEndTurnPause.setOnFinished(event -> {
-                                    if (opponent != null) {
-                                        topTextBox.getChildren().remove(remainingPlayer);
-                                        topTextBox.getChildren().add(remainingOpponent);
-                                    }
-                                    currTurn.setText("Its Your Turn!");
-                                    gameBox.getChildren().clear();
-                                    gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
-                                });
-
+                                opponentEndTurnEvent();
                                 opponentEndTurnPause.play();
                                 break;
                             case "win_game":
@@ -255,6 +211,7 @@ public class GuiClient extends Application{
                                 quitButton = new Button("Quit");
                                 styleRectangleButton(quitButton);
                                 quitButton.setOnAction(e -> {
+                                    Platform.exit();
                                     System.exit(0);
                                 });
 
@@ -284,6 +241,7 @@ public class GuiClient extends Application{
                                 quitButton = new Button("Quit");
                                 styleRectangleButton(quitButton);
                                 quitButton.setOnAction(e -> {
+                                    Platform.exit();
                                     System.exit(0);
                                 });
 
@@ -313,6 +271,34 @@ public class GuiClient extends Application{
         primaryStage.show();
     }
 
+    private void opponentEndTurnEvent() {
+        opponentEndTurnPause.setOnFinished(event -> {
+            if (opponent != null) {
+                topTextBox.getChildren().remove(remainingPlayer);
+                topTextBox.getChildren().add(remainingOpponent);
+            }
+            currTurn.setText("Its Your Turn!");
+            gameBox.getChildren().clear();
+            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+        });
+    }
+
+    private void playerEndTurnEvent() {
+        playerEndTurnPause.setOnFinished(event -> {
+            if (opponent != null) {
+                currTurn.setText("It's " + opponent + "'s Turn!");
+                topTextBox.getChildren().remove(remainingOpponent);
+                topTextBox.getChildren().add(remainingPlayer);
+            }
+            else {
+                currTurn.setText("It's the AI's Turn.");
+            }
+
+            gameBox.getChildren().clear();
+            gameBox.getChildren().add(playerBoatPane); // Change Pane after the pause
+        });
+    }
+
     private Scene createWelcomePage() {
         welcome = new Text("Welcome to Battleships!");
         welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
@@ -338,11 +324,7 @@ public class GuiClient extends Application{
             welcomeBox.getChildren().remove(buttonBox);
         });
 
-        botButton.setOnAction(e -> {
-            clientConnection.send(new Message("request_session","AI",nameTextField.getText()));
-        });
-
-
+        botButton.setOnAction(e -> clientConnection.send(new Message("request_session","AI",nameTextField.getText())));
 
         nameTextField.setOnAction(e->{
             if (nameTextField.getText().isEmpty()) {
@@ -526,38 +508,7 @@ public class GuiClient extends Application{
         playerBoatPane.setAlignment(Pos.CENTER);
         boatCells = new ArrayList<>();
 
-        // Add row labels (1 to 10)
-        for (int col = 0; col < numColumns; col++) {
-            Label colLabel = new Label(Integer.toString(col + 1));
-            colLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
-            colLabel.setMinSize(cellSize, cellSize);
-            colLabel.setAlignment(Pos.CENTER);
-            playerBoatPane.add(colLabel, col + 1, 0); // Offset by one for the column labels
-        }
-
-        // Add column labels (A to J)
-        char rowChar = 'A';
-        for (int row = 0; row < numRows; row++) {
-            Label rowLabel = new Label(String.valueOf((char)(rowChar + row)));
-            rowLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
-            rowLabel.setMinSize(cellSize, cellSize);
-            rowLabel.setAlignment(Pos.CENTER);
-            playerBoatPane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
-        }
-
-        // Populate the grid
-        for (int row = 1; row <= numRows; row++) {
-            for (int col = 1; col <= numColumns; col++) {
-                Rectangle cell = new Rectangle(cellSize, cellSize);
-                cell.setStroke(Color.BLACK);
-                cell.setFill(Color.TRANSPARENT);
-                cell.setUserData(true);
-                int finalRow = row; // Adjust for zero-based index
-                int finalCol = col; // Adjust for zero-based index
-                cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol));
-                playerBoatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
-            }
-        }
+        initializedGridPane(playerBoatPane);
 
         sceneMap.put("prep", createBoatPlaceScene());
         primaryStage.setScene(sceneMap.get("prep"));
@@ -599,13 +550,20 @@ public class GuiClient extends Application{
         enemyBoatPane = new GridPane();
         enemyBoatPane.setAlignment(Pos.CENTER);
 
+        initializedGridPane(enemyBoatPane);
+
+        sceneMap.put("game", createGamePlayScene());
+        primaryStage.setScene(sceneMap.get("game"));
+    }
+
+    private void initializedGridPane(GridPane pane) {
         // Add row labels (1 to 10)
         for (int col = 0; col < numColumns; col++) {
             Label colLabel = new Label(Integer.toString(col + 1));
             colLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
             colLabel.setMinSize(cellSize, cellSize);
             colLabel.setAlignment(Pos.CENTER);
-            enemyBoatPane.add(colLabel, col + 1, 0); // Offset by one for the column labels
+            pane.add(colLabel, col + 1, 0); // Offset by one for the column labels
         }
 
         // Add column labels (A to J)
@@ -615,7 +573,7 @@ public class GuiClient extends Application{
             rowLabel.setStyle("-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: black; -fx-font-family: Arial;");
             rowLabel.setMinSize(cellSize, cellSize);
             rowLabel.setAlignment(Pos.CENTER);
-            enemyBoatPane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
+            pane.add(rowLabel, 0, row + 1); // Offset by one for the row labels
         }
 
         // Populate the grid
@@ -627,19 +585,23 @@ public class GuiClient extends Application{
                 cell.setUserData(true);
                 int finalRow = row; // Adjust for zero-based index
                 int finalCol = col; // Adjust for zero-based index
-                cell.setOnMouseClicked(event -> {
-                    if (currChosenCell != null) {
-                        currChosenCell.setFill(Color.TRANSPARENT);
-                    }
-                    currChosenCell = (Rectangle) getNodeFromGridPane(enemyBoatPane, finalCol, finalRow);
-                    currChosenCell.setFill(Color.DARKGRAY);
-                });
-                enemyBoatPane.add(cell, col, row); // The grid content starts from (1,1) due to labels
+                if (pane == enemyBoatPane) {
+                    cell.setOnMouseClicked(event -> guessCell(finalRow, finalCol));
+                }
+                else if (pane == playerBoatPane) {
+                    cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol));
+                }
+                pane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
         }
+    }
 
-        sceneMap.put("game", createGamePlayScene());
-        primaryStage.setScene(sceneMap.get("game"));
+    private void guessCell(int finalRow, int finalCol) {
+        if (currChosenCell != null) {
+            currChosenCell.setFill(Color.TRANSPARENT);
+        }
+        currChosenCell = (Rectangle) getNodeFromGridPane(enemyBoatPane, finalCol, finalRow);
+        currChosenCell.setFill(Color.DARKGRAY);
     }
 
     private Scene createGamePlayScene() {
@@ -736,6 +698,7 @@ public class GuiClient extends Application{
                 ArrayList<Integer> newBoatCells = new ArrayList<>();
                 newBoatCells.add(newCol);
                 newBoatCells.add(row);
+
                 boatCells.add(newBoatCells);
                 newBoat.add(newBoatCells);
             }
@@ -774,6 +737,7 @@ public class GuiClient extends Application{
                 ArrayList<Integer> newBoatCells = new ArrayList<>();
                 newBoatCells.add(col);
                 newBoatCells.add(newRow);
+
                 boatCells.add(newBoatCells);
                 newBoat.add(newBoatCells);
             }
