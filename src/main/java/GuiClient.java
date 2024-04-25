@@ -670,13 +670,15 @@ public class GuiClient extends Application{
             topTextBox.getChildren().add(remainingPlayer);
         }
 
+        // Main border pane settings
         BorderPane pane = new BorderPane();
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: grey");
-        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
 
+        // Set top, center, and right alignment
         pane.setTop(topTextBox);
         pane.setCenter(gameBox);
+        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
         if (opponent != null) {
             pane.setRight(chatBox);
         }
