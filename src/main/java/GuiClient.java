@@ -22,7 +22,7 @@ import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
 public class GuiClient extends Application{
-    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayerBoats;
+    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent;
     private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton, retryButton, quitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
@@ -36,7 +36,7 @@ public class GuiClient extends Application{
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
     private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
-    private int remainingBoats = 5;
+    private int remainingBoats = 5, remainingOpponentBoats = 5;
     private Rectangle currChosenCell = null;
     private PauseTransition playerEndTurnPause, opponentEndTurnPause;
     private ArrayList<ArrayList<Integer>> boatCells;
@@ -120,6 +120,10 @@ public class GuiClient extends Application{
                             case "start_game":
                                 gamePlay(primaryStage);
                                 break;
+                            case "entire_opponent_boat_sunk":
+                                System.out.println("Opponent Boat Sunk!");
+                                remainingOpponent.setText(opponent + "'s Remaining Boats: " + (--remainingOpponentBoats));
+                                break;
                             case "hit":
                                 currChosenCell.setFill(Color.ORANGE);
                                 currChosenCell.setDisable(true);
@@ -129,7 +133,9 @@ public class GuiClient extends Application{
                                 playerEndTurnPause = new PauseTransition(Duration.seconds(2));
                                 playerEndTurnPause.setOnFinished(event -> {
                                     if (opponent != null) {
-                                        currTurn.setText("It's " + opponent + " Turn!");
+                                        currTurn.setText("It's " + opponent + "'s Turn!");
+                                        topTextBox.getChildren().remove(remainingOpponent);
+                                        topTextBox.getChildren().add(remainingPlayer);
                                     }
                                     else {
                                         currTurn.setText("It's the AI's Turn.");
@@ -150,7 +156,9 @@ public class GuiClient extends Application{
                                 playerEndTurnPause = new PauseTransition(Duration.seconds(2));
                                 playerEndTurnPause.setOnFinished(event -> {
                                     if (opponent != null) {
-                                        currTurn.setText("It's " + opponent + " Turn!");
+                                        currTurn.setText("It's " + opponent + "'s Turn!");
+                                        topTextBox.getChildren().remove(remainingOpponent);
+                                        topTextBox.getChildren().add(remainingPlayer);
                                     }
                                     else {
                                         currTurn.setText("It's the AI's Turn.");
@@ -184,8 +192,8 @@ public class GuiClient extends Application{
                                             // If no more coordinates, remove the boat
                                             if (coordinates.size() == 0) {
                                                 iterator.remove();
-                                                remainingPlayerBoats.setText("Your Remaining Boats: " + (--remainingBoats));
-
+                                                remainingPlayer.setText("Your Remaining Boats: " + (--remainingBoats));
+                                                clientConnection.send(new Message("entire_boat_sunk", sessionID));
                                             }
 
                                             break;
@@ -195,6 +203,10 @@ public class GuiClient extends Application{
 
                                 opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
                                 opponentEndTurnPause.setOnFinished(event -> {
+                                    if (opponent != null) {
+                                        topTextBox.getChildren().remove(remainingPlayer);
+                                        topTextBox.getChildren().add(remainingOpponent);
+                                    }
                                     currTurn.setText("Its Your Turn!");
                                     gameBox.getChildren().clear();
                                     gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
@@ -213,6 +225,10 @@ public class GuiClient extends Application{
 
                                 opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
                                 opponentEndTurnPause.setOnFinished(event -> {
+                                    if (opponent != null) {
+                                        topTextBox.getChildren().remove(remainingPlayer);
+                                        topTextBox.getChildren().add(remainingOpponent);
+                                    }
                                     currTurn.setText("Its Your Turn!");
                                     gameBox.getChildren().clear();
                                     gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
@@ -225,7 +241,9 @@ public class GuiClient extends Application{
                                 currChosenCell.setDisable(true);
 
                                 currTurn.setText("You Won!");
-                                remainingPlayerBoats.setText("");
+                                remainingPlayer.setText("");
+                                remainingOpponent.setText("");
+
 
                                 retryButton = new Button("Retry");
                                 styleRectangleButton(retryButton);
@@ -253,7 +271,8 @@ public class GuiClient extends Application{
                                 targetLoseCell.setFill(Color.INDIANRED);
 
                                 currTurn.setText("You Lose. Try Again?");
-                                remainingPlayerBoats.setText("");
+                                remainingPlayer.setText("");
+                                remainingOpponent.setText("");
 
                                 retryButton = new Button("Retry");
                                 styleRectangleButton(retryButton);
@@ -519,8 +538,11 @@ public class GuiClient extends Application{
         currTurn.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         remainingBoats = 5;
-        remainingPlayerBoats = new Text("Your Remaining Boats: " + remainingBoats);
-        remainingPlayerBoats.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+        remainingPlayer = new Text("Your Remaining Boats: " + remainingBoats);
+        remainingPlayer.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
+
+        remainingOpponent = new Text(opponent + "'s Remaining Boats: " + remainingOpponentBoats);
+        remainingOpponent.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         hitButton = new Button("Hit!");
         hitButton.setAlignment(Pos.CENTER);
@@ -591,7 +613,7 @@ public class GuiClient extends Application{
     }
 
     private Scene createGamePlayScene() {
-        topTextBox = new VBox(15, currTurn, remainingPlayerBoats);
+        topTextBox = new VBox(15, currTurn);
         topTextBox.setAlignment(Pos.CENTER);
         topTextBox.setPadding(new Insets(10, 0, 50, 0));
 
@@ -601,6 +623,12 @@ public class GuiClient extends Application{
 
         if (opponent == null || firstPlayer.equals(username)) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            if (opponent != null) {
+                topTextBox.getChildren().add(remainingOpponent);
+            }
+            else {
+                topTextBox.getChildren().add(remainingPlayer);
+            }
         }
         else {
             if (opponent != null) {
@@ -610,6 +638,7 @@ public class GuiClient extends Application{
                 currTurn.setText("It's the AI's Turn.");
             }
             gameBox.getChildren().add(playerBoatPane);
+            topTextBox.getChildren().add(remainingPlayer);
         }
 
         BorderPane pane = new BorderPane();
