@@ -13,6 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -299,6 +300,9 @@ public class GuiClient extends Application{
 
         clientConnection.start();
 
+        chatBox.setAlignment(Pos.CENTER);
+
+
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
@@ -374,6 +378,8 @@ public class GuiClient extends Application{
         orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
+        messageField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
+
         messageField.setOnAction(e->{
             String content = messageField.getText();
             clientConnection.send(new Message("indiv_messsage", content, username, opponent));
@@ -381,8 +387,35 @@ public class GuiClient extends Application{
             messageField.setText("");
         });
 
-        chatLog.setStyle("-fx-background-insets: 0; -fx-padding: 5; -fx-border-insets: 0; -fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #e0e0e0; -fx-border-width: 1;");
+        chatLog.setStyle("-fx-background-insets: 0; " + "-fx-padding: 5; " + "-fx-border-insets: 0; " + "-fx-background-radius: 5; " + "-fx-border-radius: 5; " + "-fx-border-color: #e0e0e0; " + "-fx-border-width: 1; " + "-fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #ffffff, #f2f2f2); " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
 
+        chatLog.addEventFilter(ScrollEvent.SCROLL, event -> {
+            ScrollBar scrollBar = (ScrollBar)chatLog.lookup(".scroll-bar");
+            if (scrollBar != null) {
+                scrollBar.setStyle("-fx-background-color: transparent; " + "-fx-background-radius: 5; " + "-fx-background-insets: 0, 0, 1, 2; " + "-fx-padding: 0.833333em; " + "-fx-background-color: #e0e0e0; " + "-fx-background-insets: 0; " + "-fx-background-radius: 4; " + "-fx-background-color: #e0e0e0; " + "-fx-background-radius: 4; ");
+            }
+        });
+
+        chatLog.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    // Customize text fill, font, etc.
+                    setStyle(
+                            "-fx-text-fill: #333333; " +
+                                    "-fx-font-weight: bold; " +
+                                    "-fx-padding: 10; " +
+                                    "-fx-border-color: #e0e0e0; " +
+                                    "-fx-border-width: 0 0 1 0; "
+                    );
+                }
+            }
+        });
 
         middleHBox.getChildren().add(playerBoatPane);
         middleHBox.getChildren().add(boatSelectBox);
@@ -614,12 +647,18 @@ public class GuiClient extends Application{
 
     private Scene createGamePlayScene() {
         topTextBox = new VBox(15, currTurn);
+        // Top text box settings
+        topTextBox = new VBox(15);
         topTextBox.setAlignment(Pos.CENTER);
-        topTextBox.setPadding(new Insets(10, 0, 50, 0));
+        topTextBox.setPadding(new Insets(10, 50, 10, 50)); // Add padding to left and right to center the content
 
-        gameBox = new VBox(100);
-        gameButtonBox = new HBox(20, hitButton);
-        gameButtonBox.setAlignment(Pos.CENTER);
+        // Add children to topTextBox
+        topTextBox.getChildren().addAll(currTurn, remainingEnemy);
+
+        // Main game box settings
+        gameBox = new VBox(25);
+        gameBox.setAlignment(Pos.CENTER);
+        gameBox.setPadding(new Insets(0, 20, 0, 20)); // Add padding to left and right
 
         if (opponent == null || firstPlayer.equals(username)) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
@@ -629,29 +668,45 @@ public class GuiClient extends Application{
             else {
                 topTextBox.getChildren().add(remainingPlayer);
             }
+        HHH = new HBox(10);
+
+        // Set the current turn text appropriately
+        if (opponent == null ) {
+            currTurn.setText("It's Your Turn!");
+            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+            HHH.getChildren().add(gameBox);
+        }
+        else if(firstPlayer.equals(username)) {
+            currTurn.setText("It's Your Turn!");
+            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
         }
         else {
-            if (opponent != null) {
-                currTurn.setText("It's " + opponent + " Turn!");
-            }
-            else {
-                currTurn.setText("It's the AI's Turn.");
-            }
+            currTurn.setText(opponent != null ? "It's " + opponent + "'s Turn!" : "It's the AI's Turn.");
             gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
+            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
         }
+        chatBox.setAlignment(Pos.CENTER);
 
+        // Assuming HHH is an HBox with horizontal layout
+//        HHH = new HBox(10);
+        HHH.setAlignment(Pos.CENTER); // Center the content in HBox
+        HHH.setPadding(new Insets(10)); // Uniform padding
+//        HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
+
+        // Main border pane settings
         BorderPane pane = new BorderPane();
-        pane.setPadding(new Insets( 20));
+        pane.setPadding(new Insets(20)); // Padding for the border pane
         pane.setStyle("-fx-background-color: grey");
-        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
 
+        // Set top and center alignment
         pane.setTop(topTextBox);
-        pane.setCenter(gameBox);
-        if (opponent != null) {
-            pane.setRight(chatBox);
-        }
+        BorderPane.setAlignment(topTextBox, Pos.CENTER);
+        pane.setCenter(HHH);
+        BorderPane.setAlignment(HHH, Pos.CENTER);
 
+        // Return the scene
         return new Scene(pane, 900, 700);
     }
 
@@ -779,61 +834,21 @@ public class GuiClient extends Application{
 
     private void styleRectangleButton(Button button){
 
-        button.setStyle("-fx-font-size: 14px; " +
-                "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
-                "-fx-text-fill: black; " +
-                "-fx-pref-width: 120px; " +
-                "-fx-pref-height: 40px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20;");
+        button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 120px; " + "-fx-pref-height: 40px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20;");
         button.setEffect(new DropShadow(10, Color.BLACK));
 
         // Hover effect
-        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 14px; " +
-                "-fx-background-color: " + "linear-gradient(#a2a4a6, #bbbdbf)" + "; " +
-                "-fx-text-fill: black; " +
-                "-fx-pref-width: 125px; " +  // Slightly larger on hover
-                "-fx-pref-height: 45px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
-        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 14px; " +
-                "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " +
-                "-fx-text-fill: black; " +
-                "-fx-pref-width: 120px; " +
-                "-fx-pref-height: 40px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
+        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#a2a4a6, #bbbdbf)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 125px; " + "-fx-pref-height: 45px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
+        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 120px; " + "-fx-pref-height: 40px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
     private void styleButton(Button button, String baseColor, String hoverColor) {
-        button.setStyle("-fx-font-size: 15px; " +
-                "-fx-background-color: " + baseColor + "; " +
-                "-fx-text-fill: white; " +
-                "-fx-pref-width: 100px; " +
-                "-fx-pref-height: 20px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20;");
+        button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + baseColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 100px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20;");
         button.setEffect(new DropShadow(10, Color.BLACK));
 
         // Hover effect
-        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " +
-                "-fx-background-color: " + hoverColor + "; " +
-                "-fx-text-fill: white; " +
-                "-fx-pref-width: 110px; " +  // Slightly larger on hover
-                "-fx-pref-height: 35px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
-        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 15px; " +
-                "-fx-background-color: " + baseColor + "; " +
-                "-fx-text-fill: white; " +
-                "-fx-pref-width: 100px; " +
-                "-fx-pref-height: 20px; " +
-                "-fx-border-radius: 20; " +
-                "-fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
+        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + hoverColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 110px; " + "-fx-pref-height: 35px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
+        button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + baseColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 100px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
     private void addImageToGridPane(String imagePath, int column, int row) {
