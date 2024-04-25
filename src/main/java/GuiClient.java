@@ -600,21 +600,31 @@ public class GuiClient extends Application{
         gameBox.setAlignment(Pos.CENTER);
         gameBox.setPadding(new Insets(0, 20, 0, 20)); // Add padding to left and right
 
+        HHH = new HBox(10);
+
         // Set the current turn text appropriately
-        if (opponent == null || firstPlayer.equals(username)) {
+        if (opponent == null ) {
             currTurn.setText("It's Your Turn!");
             gameBox.getChildren().addAll(enemyBoatPane, hitButton);
-        } else {
+            HHH.getChildren().add(gameBox);
+        }
+        else if(firstPlayer.equals(username)) {
+            currTurn.setText("It's Your Turn!");
+            gameBox.getChildren().addAll(enemyBoatPane, hitButton);
+            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
+        }
+        else {
             currTurn.setText(opponent != null ? "It's " + opponent + "'s Turn!" : "It's the AI's Turn.");
             gameBox.getChildren().add(playerBoatPane);
+            HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
         }
         chatBox.setAlignment(Pos.CENTER);
 
         // Assuming HHH is an HBox with horizontal layout
-        HHH = new HBox(10);
+//        HHH = new HBox(10);
         HHH.setAlignment(Pos.CENTER); // Center the content in HBox
         HHH.setPadding(new Insets(10)); // Uniform padding
-        HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
+//        HHH.getChildren().addAll(gameBox, chatBox); // Add gameBox and chatBox to the horizontal layout
 
         // Main border pane settings
         BorderPane pane = new BorderPane();
