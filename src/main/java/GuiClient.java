@@ -35,7 +35,7 @@ public class GuiClient extends Application{
     private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
     private int remainingBoats = 5, boatSize;
     private Rectangle currChosenCell = null;
-    private ArrayList<ArrayList<Integer>> boatCells, chosenCell;
+    private ArrayList<ArrayList<Integer>> boatCells;
 
     private String[] boatImages = {
             "shiphead.png",
@@ -422,8 +422,6 @@ public class GuiClient extends Application{
     }
 
     private void gamePlay(Stage primaryStage) {
-        chosenCell = new ArrayList<>();
-
         currTurn = new Text("It's Your Turn!");
         currTurn.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
@@ -441,7 +439,7 @@ public class GuiClient extends Application{
             int col = GridPane.getColumnIndex(currChosenCell);
             int row = GridPane.getRowIndex(currChosenCell);
 
-            chosenCell.clear();
+            ArrayList<ArrayList<Integer>> chosenCell = new ArrayList<>();
             ArrayList<Integer> tempChosenCell = new ArrayList<>();
             tempChosenCell.add(col);
             tempChosenCell.add(row);

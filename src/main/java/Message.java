@@ -7,7 +7,6 @@ public class Message implements Serializable {
     String content;
     String username;
     String recipient;
-
     ArrayList<ArrayList<Integer>> cells;
 
     Message(String type, String content) {
@@ -27,7 +26,6 @@ public class Message implements Serializable {
         this.username = username;
         this.cells = cells;
     }
-
     public Message(String type, String content, String msgSender, String msgRecipient) { // individual message
         this.type = type;
         this.content = content;
