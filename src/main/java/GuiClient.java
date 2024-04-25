@@ -20,11 +20,11 @@ import javafx.util.Duration;
 
 public class GuiClient extends Application{
     private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingEnemy;
-    private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton;
+    private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton, retryButton, quitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
     private TextField nameTextField, messageField = new TextField();
-    private HBox buttonBox, middleHBox = new HBox(50);
+    private HBox buttonBox, finalGameBox, gameButtonBox, middleHBox = new HBox(50);
     ListView<String> chatLog = new ListView<>();
     private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
     private Message client = new Message();
@@ -35,6 +35,7 @@ public class GuiClient extends Application{
     private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
     private int remainingBoats = 5, boatSize;
     private Rectangle currChosenCell = null;
+    private Region middleSpacer;
     private ArrayList<ArrayList<Integer>> boatCells;
 
     private String[] boatImages = {
@@ -68,7 +69,7 @@ public class GuiClient extends Application{
                                 nameError.setText("Username already exists! Choose a different username");
                                 break;
                             case "wait_for_opponent":
-                                choose.setText("Waiting for opponent");
+                                choose.setText("Waiting for opponent...");
                                 break;
                             case "start_session":
                                 sessionID = message.content;
@@ -83,6 +84,8 @@ public class GuiClient extends Application{
                                 } else {
                                     opponent = firstPlayer;
                                 }
+
+                                choose.setText("Opponent Found!");
 
                                 Text t1 = new Text("Your opponent is " + opponent);
                                 t1.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
@@ -100,7 +103,7 @@ public class GuiClient extends Application{
                                 break;
                             case "start_AI_session":
                                 sessionID = message.content.split(";")[0];
-                                boatPlace(primaryStage);
+                                gamePlay(primaryStage);
                                 break;
                             case "wait_for_other_player_boats":
                                 error.setText("Waiting for opponent...");
@@ -177,6 +180,59 @@ public class GuiClient extends Application{
                                 gameBox.getChildren().clear();
                                 gameBox.getChildren().addAll(enemyBoatPane, hitButton);
                                 break;
+                            case "win_game":
+                                currChosenCell.setFill(Color.ORANGE);
+                                currChosenCell.setDisable(true);
+
+                                currTurn.setText("You Won!");
+                                remainingEnemy.setText("");
+
+                                retryButton = new Button("Retry");
+                                styleRectangleButton(retryButton);
+                                retryButton.setOnAction(e -> {
+                                    boatPlace(primaryStage);
+                                });
+
+                                quitButton = new Button("Quit");
+                                styleRectangleButton(quitButton);
+                                quitButton.setOnAction(e -> {
+                                    System.exit(0);
+                                });
+
+                                finalGameBox = new HBox(20, retryButton, quitButton);
+                                finalGameBox.setAlignment(Pos.CENTER);
+                                gameBox.getChildren().remove(hitButton);
+                                gameBox.getChildren().add(finalGameBox);
+
+                                break;
+                            case "lose_game":
+                                ArrayList<ArrayList<Integer>> loseCell = message.cells;
+                                Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
+
+                                System.out.println("The opponent hit at X: " + loseCell.get(0).get(0));
+                                System.out.println("The opponent hit at Y: " + loseCell.get(0).get(1));
+
+                                targetLoseCell.setFill(Color.INDIANRED);
+
+                                currTurn.setText("You Lose. Try Again?");
+
+                                retryButton = new Button("Retry");
+                                styleRectangleButton(retryButton);
+                                retryButton.setOnAction(e -> {
+                                    boatPlace(primaryStage);
+                                });
+
+                                quitButton = new Button("Quit");
+                                styleRectangleButton(quitButton);
+                                quitButton.setOnAction(e -> {
+                                    System.exit(0);
+                                });
+
+                                finalGameBox = new HBox(20, retryButton, quitButton);
+                                finalGameBox.setAlignment(Pos.CENTER);
+                                gameBox.getChildren().add(finalGameBox);
+
+                                break;
                         }
 
                     }
@@ -250,7 +306,7 @@ public class GuiClient extends Application{
         BorderPane pane = new BorderPane(welcomeBox);
         pane.setStyle("-fx-background-color: #383838;");
 
-        return new Scene(pane, 550, 550);
+        return new Scene(pane, 900, 700);
     }
 
     private Scene createBoatPlaceScene(){
@@ -276,7 +332,6 @@ public class GuiClient extends Application{
             middleHBox.getChildren().add(chatBox);
         }
 
-//        middleHBox = new HBox(50, playerBoatPane, boatSelectBox,  chatBox);
         middleHBox.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
@@ -287,7 +342,7 @@ public class GuiClient extends Application{
         pane.setStyle("-fx-background-color: Grey");
 
         BorderPane.setAlignment(prompt, Pos.CENTER);
-        return new Scene(pane, 700, 700);
+        return new Scene(pane, 900, 700);
     }
 
     private void selectShip(Button ship) {
@@ -503,10 +558,14 @@ public class GuiClient extends Application{
         topTextBox.setPadding(new Insets(10));
 
         gameBox = new VBox();
+        middleSpacer = new Region();
+        middleSpacer.setPadding(new Insets(150, 10, 0, 0));
+        gameButtonBox = new HBox(middleSpacer, hitButton);
+        gameButtonBox.setAlignment(Pos.BOTTOM_CENTER);
 
         if (opponent == null || firstPlayer.equals(username)) {
             gameBox.getChildren().add(enemyBoatPane);
-            gameBox.getChildren().add(hitButton);
+            gameBox.getChildren().add(gameButtonBox);
         }
         else {
             if (opponent != null) {
@@ -526,7 +585,7 @@ public class GuiClient extends Application{
         pane.setTop(topTextBox);
         pane.setCenter(gameBox);
 
-        return new Scene(pane, 700, 700);
+        return new Scene(pane, 900, 700);
     }
 
     private void placeShip(int row, int col) {
