@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javafx.application.Application;
@@ -97,6 +98,11 @@ public class GuiClient extends Application{
                                 PauseTransition pause = new PauseTransition(Duration.seconds(2));
                                 pause.setOnFinished(event -> {
                                     boatPlace(primaryStage);
+                                    choose.setText("Play with another player or with the AI");
+                                    welcomeBox.getChildren().remove(nameTextField);
+                                    welcomeBox.getChildren().add(buttonBox);
+                                    nameError.setText("");
+
                                 });
                                 pause.play();
 
@@ -165,7 +171,27 @@ public class GuiClient extends Application{
 
                                 targetSinkCell.setFill(Color.INDIANRED);
 
+                                Iterator<Map.Entry<String, ArrayList<ArrayList<Integer>>>> iterator = boatCoordinates.entrySet().iterator();
 
+                                while (iterator.hasNext()) {
+                                    Map.Entry<String, ArrayList<ArrayList<Integer>>> entry = iterator.next();
+                                    ArrayList<ArrayList<Integer>> coordinates = entry.getValue();
+
+                                    for (ArrayList<Integer> coordinate : coordinates) {
+                                        if (coordinate.get(0).equals(sinkCell.get(0).get(0)) && coordinate.get(1).equals(sinkCell.get(0).get(1))) {
+                                            coordinates.remove(coordinate); // Remove the coordinate if it matches
+
+                                            // If no more coordinates, remove the boat
+                                            if (coordinates.size() == 0) {
+                                                iterator.remove();
+                                                remainingPlayerBoats.setText("Your Remaining Boats: " + (--remainingBoats));
+
+                                            }
+
+                                            break;
+                                        }
+                                    }
+                                }
 
                                 opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
                                 opponentEndTurnPause.setOnFinished(event -> {
@@ -444,7 +470,7 @@ public class GuiClient extends Application{
             error.setText("");
         });
 
-        remaining = new Text("Your Remaining Boats: " + remainingBoats);
+        remaining = new Text("Remaining Boats: " + remainingBoats);
         remaining.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         playerBoatPane = new GridPane();
@@ -493,7 +519,7 @@ public class GuiClient extends Application{
         currTurn.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         remainingBoats = 5;
-        remainingPlayerBoats = new Text("Remaining Enemy Boats: " + remainingBoats);
+        remainingPlayerBoats = new Text("Your Remaining Boats: " + remainingBoats);
         remainingPlayerBoats.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
         hitButton = new Button("Hit!");
