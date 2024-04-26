@@ -359,6 +359,10 @@ public class GuiClient extends Application{
         welcomeBox = new VBox(20, welcome, choose, nameError, nameTextField);
         welcomeBox.setAlignment(Pos.CENTER);
 
+        Image backgroundImage = new Image("bg1.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        welcomeBox.setBackground(new Background(bgImage));
+
         BorderPane pane = new BorderPane(welcomeBox);
         pane.setStyle("-fx-background-color: #383838;");
 
@@ -430,6 +434,10 @@ public class GuiClient extends Application{
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
+
+        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        mainVBox.setBackground(new Background(bgImage));
 
         BorderPane pane = new BorderPane(mainVBox);
         pane.setPadding(new Insets( 20));
@@ -650,6 +658,8 @@ public class GuiClient extends Application{
         gameButtonBox = new HBox(20, hitButton);
         gameButtonBox.setAlignment(Pos.CENTER);
 
+        chatBox.setAlignment(Pos.CENTER);
+
         // If the player is playing against the AI
         if (opponent == null) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
@@ -662,7 +672,7 @@ public class GuiClient extends Application{
             mainGameBox.getChildren().addAll(gameBox, chatBox);
         }
         else {
-            currTurn.setText("It's " + opponent + " Turn!");
+            currTurn.setText("It's " + opponent + "'s Turn!");
             gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
             mainGameBox.getChildren().addAll(gameBox, chatBox);
@@ -673,13 +683,12 @@ public class GuiClient extends Application{
         pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: grey");
 
-//        // Set top, center, and right alignment
-//        pane.setTop(topTextBox);
-//        pane.setCenter(gameBox);
-//        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
-//        if (opponent != null) {
-//            pane.setRight(chatBox);
-//        }
+        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        mainGameBox.setBackground(new Background(bgImage));
+
+        // Set top, center, and right alignment
+        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
 
         // Set top and center alignment
         pane.setTop(topTextBox);
