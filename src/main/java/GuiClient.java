@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
+import javafx.scene.control.ProgressIndicator;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -23,16 +23,14 @@ import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
 public class GuiClient extends Application{
-    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent;
+    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent, chatHeader = new Text("Chat Box");;
     private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton, retryButton, quitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
     private TextField nameTextField, messageField = new TextField();
     private HBox buttonBox, gameButtonBox, middleHBox = new HBox(50), mainGameBox;
     ListView<String> chatLog = new ListView<>();
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
-    private Message client = new Message();
-    private ArrayList<Message> messages = new ArrayList<>();
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatHeader, chatLog, messageField);
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
@@ -42,6 +40,7 @@ public class GuiClient extends Application{
     private PauseTransition playerEndTurnPause, opponentEndTurnPause;
     private ArrayList<ArrayList<Integer>> boatCells;
     private HashMap<String, ArrayList<ArrayList<Integer>>> boatCoordinates = new HashMap<>();
+    private ProgressIndicator loadingIndicator = new ProgressIndicator();
 
     private String[] boatImages = {
             "shiphead.png",
@@ -75,6 +74,7 @@ public class GuiClient extends Application{
                                 break;
                             case "wait_for_opponent":
                                 choose.setText("Waiting for opponent...");
+                                welcomeBox.getChildren().add(loadingIndicator);
                                 break;
                             case "start_session":
                                 sessionID = message.content;
@@ -91,6 +91,7 @@ public class GuiClient extends Application{
                                 }
 
                                 choose.setText("Opponent Found!");
+                                welcomeBox.getChildren().remove(loadingIndicator);
 
                                 Text opponentFound = new Text("Your opponent is " + opponent);
                                 opponentFound.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
@@ -279,7 +280,6 @@ public class GuiClient extends Application{
         nameError.setText("");
         middleHBox.getChildren().clear();
         opponent = null;
-//        middleHBox.getChildren().addAll(playerBoatPane, boatSelectBox, chatBox);
     }
 
     private void opponentEndTurnEvent() {
@@ -348,6 +348,10 @@ public class GuiClient extends Application{
                 nameTextField.clear();
             }
         });
+
+        loadingIndicator.setProgress(-1);
+        loadingIndicator.setMaxSize(50, 50);
+        loadingIndicator.setStyle("-fx-progress-color: #3498db;");
 
         buttonBox = new HBox(40, onlineButton, botButton);
         buttonBox.setAlignment(Pos.CENTER);
@@ -422,6 +426,7 @@ public class GuiClient extends Application{
         }
 
         middleHBox.setAlignment(Pos.CENTER);
+        chatBox.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
@@ -487,6 +492,7 @@ public class GuiClient extends Application{
         requiredBlocks.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
         orientationSelected.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
         error.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
+        chatHeader.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
 
         verticalButton = new Button("Vertical");
         horizontalButton = new Button("Horizontal");
@@ -643,8 +649,6 @@ public class GuiClient extends Application{
         // Button box settings
         gameButtonBox = new HBox(20, hitButton);
         gameButtonBox.setAlignment(Pos.CENTER);
-
-        chatBox.setAlignment(Pos.CENTER);
 
         // If the player is playing against the AI
         if (opponent == null) {
