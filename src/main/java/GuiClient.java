@@ -28,7 +28,7 @@ public class GuiClient extends Application{
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
     private TextField nameTextField, messageField = new TextField();
-    private HBox buttonBox, gameButtonBox, middleHBox = new HBox(50), mainGameBox;
+    private HBox buttonBox, gameButtonBox, middleHBox = new HBox(50);
     ListView<String> chatLog = new ListView<>();
     private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
     private Message client = new Message();
@@ -37,7 +37,7 @@ public class GuiClient extends Application{
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
     private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
-    private int remainingBoats, remainingOpponentBoats = 5;
+    private int remainingBoats = 5, remainingOpponentBoats = 5;
     private Rectangle currChosenCell = null;
     private PauseTransition playerEndTurnPause, opponentEndTurnPause;
     private ArrayList<ArrayList<Integer>> boatCells;
@@ -92,13 +92,18 @@ public class GuiClient extends Application{
 
                                 choose.setText("Opponent Found!");
 
-                                Text opponentFound = new Text("Your opponent is " + opponent);
-                                opponentFound.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
-                                welcomeBox.getChildren().add(opponentFound);
+                                Text t1 = new Text("Your opponent is " + opponent);
+                                t1.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
+                                welcomeBox.getChildren().add(t1);
 
                                 PauseTransition pause = new PauseTransition(Duration.seconds(2));
                                 pause.setOnFinished(event -> {
                                     boatPlace(primaryStage);
+                                    choose.setText("Play with another player or with the AI");
+                                    welcomeBox.getChildren().remove(nameTextField);
+                                    welcomeBox.getChildren().add(buttonBox);
+                                    nameError.setText("");
+
                                 });
                                 pause.play();
 
@@ -126,7 +131,7 @@ public class GuiClient extends Application{
                                 currChosenCell = null;
 
                                 System.out.println("It was a hit!");
-                                playerEndTurnPause = new PauseTransition(Duration.seconds(2));
+                                playerEndTurnPause = new PauseTransition(Duration.seconds(0.5));
                                 playerEndTurnEvent();
                                 playerEndTurnPause.play(); // Start the delay
                                 break;
@@ -136,7 +141,7 @@ public class GuiClient extends Application{
                                 currChosenCell = null;
 
                                 System.out.println("It was a miss.");
-                                playerEndTurnPause = new PauseTransition(Duration.seconds(2));
+                                playerEndTurnPause = new PauseTransition(Duration.seconds(0.5));
                                 playerEndTurnEvent();
                                 playerEndTurnPause.play(); // Start the delay
                                 break;
@@ -184,7 +189,7 @@ public class GuiClient extends Application{
 
                                 targetMissCell.setFill(Color.BLACK);
 
-                                opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
+                                opponentEndTurnPause = new PauseTransition(Duration.seconds(0.5));
                                 opponentEndTurnEvent();
                                 opponentEndTurnPause.play();
                                 break;
@@ -192,17 +197,14 @@ public class GuiClient extends Application{
                                 currChosenCell.setFill(Color.ORANGE);
                                 currChosenCell.setDisable(true);
 
-                                currTurn.setText("YOU WON!");
-                                currTurn.setStyle("-fx-font-size: 40; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
+                                currTurn.setText("You Won!");
                                 remainingPlayer.setText("");
                                 remainingOpponent.setText("");
 
 
                                 retryButton = new Button("Retry");
-                                retryButton.setAlignment(Pos.CENTER);
-                                styleButton(retryButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
+                                styleRectangleButton(retryButton);
                                 retryButton.setOnAction(e -> {
-                                    nextGamePrep();
                                     primaryStage.setScene(sceneMap.get("welcome"));
                                 });
 
@@ -226,16 +228,13 @@ public class GuiClient extends Application{
 
                                 targetLoseCell.setFill(Color.INDIANRED);
 
-                                currTurn.setText("You Lost. Try Again?");
-                                currTurn.setStyle("-fx-font-size: 40; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
+                                currTurn.setText("You Lose. Try Again?");
                                 remainingPlayer.setText("");
                                 remainingOpponent.setText("");
 
                                 retryButton = new Button("Retry");
-                                retryButton.setAlignment(Pos.CENTER);
-                                styleButton(retryButton, "linear-gradient(#78c800, #558b2f)", "linear-gradient(#9eff56, #76d25b)");
+                                styleRectangleButton(retryButton);
                                 retryButton.setOnAction(e -> {
-                                    nextGamePrep();
                                     primaryStage.setScene(sceneMap.get("welcome"));
                                 });
 
@@ -272,16 +271,6 @@ public class GuiClient extends Application{
         primaryStage.show();
     }
 
-    private void nextGamePrep() {
-        choose.setText("Play with another player or with the AI");
-        welcomeBox.getChildren().clear();
-        welcomeBox.getChildren().addAll(welcome, choose, buttonBox);
-        nameError.setText("");
-        middleHBox.getChildren().clear();
-        opponent = null;
-//        middleHBox.getChildren().addAll(playerBoatPane, boatSelectBox, chatBox);
-    }
-
     private void opponentEndTurnEvent() {
         opponentEndTurnPause.setOnFinished(event -> {
             if (opponent != null) {
@@ -311,6 +300,7 @@ public class GuiClient extends Application{
     }
 
     private Scene createWelcomePage() {
+
         welcome = new Text("Welcome to Battleships!");
         welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
@@ -355,6 +345,10 @@ public class GuiClient extends Application{
         welcomeBox = new VBox(20, welcome, choose, nameError, nameTextField);
         welcomeBox.setAlignment(Pos.CENTER);
 
+        Image backgroundImage = new Image("bg1.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        welcomeBox.setBackground(new Background(bgImage));
+
         BorderPane pane = new BorderPane(welcomeBox);
         pane.setStyle("-fx-background-color: #383838;");
 
@@ -371,13 +365,10 @@ public class GuiClient extends Application{
         messageField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
 
         messageField.setOnAction(e->{
-            if (!messageField.getText().isEmpty()) {
-                String content = messageField.getText();
-
-                clientConnection.send(new Message("indiv_messsage", content, username, opponent));
-                chatLog.getItems().add("You to " + opponent + ": " + content);
-                messageField.setText("");
-            }
+            String content = messageField.getText();
+            clientConnection.send(new Message("indiv_messsage", content, username, opponent));
+            chatLog.getItems().add("You to " + opponent + ": " + content);
+            messageField.setText("");
         });
 
         chatLog.setStyle("-fx-background-insets: 0; " + "-fx-padding: 5; " + "-fx-border-insets: 0; " + "-fx-background-radius: 5; " + "-fx-border-radius: 5; " + "-fx-border-color: #e0e0e0; " + "-fx-border-width: 1; " + "-fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #ffffff, #f2f2f2); " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
@@ -415,19 +406,17 @@ public class GuiClient extends Application{
         if (opponent != null) {
             middleHBox.getChildren().add(chatBox);
         }
-        else {
-            if (middleHBox.getChildren().contains(chatBox)) {
-                middleHBox.getChildren().remove(chatBox);
-            }
-        }
 
         middleHBox.setAlignment(Pos.CENTER);
 
         mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
 
+        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        mainVBox.setBackground(new Background(bgImage));
+
         BorderPane pane = new BorderPane(mainVBox);
-        pane.setPadding(new Insets( 20));
         pane.setStyle("-fx-background-color: Grey");
 
         BorderPane.setAlignment(prompt, Pos.CENTER);
@@ -520,7 +509,6 @@ public class GuiClient extends Application{
             error.setText("");
         });
 
-        remainingBoats = 5;
         remaining = new Text("Remaining Boats: " + remainingBoats);
         remaining.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
@@ -542,7 +530,6 @@ public class GuiClient extends Application{
         remainingPlayer = new Text("Your Remaining Boats: " + remainingBoats);
         remainingPlayer.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
-        remainingOpponentBoats = 5;
         remainingOpponent = new Text(opponent + "'s Remaining Boats: " + remainingOpponentBoats);
         remainingOpponent.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
 
@@ -629,59 +616,51 @@ public class GuiClient extends Application{
         // Top text box settings
         topTextBox = new VBox(15, currTurn);
         topTextBox.setAlignment(Pos.CENTER);
-        topTextBox.setPadding(new Insets(10, 50, 10, 50));
+        topTextBox.setPadding(new Insets(10, 0, 50, 0));
 
         // Main game box settings
-        gameBox = new VBox(25);
-        gameBox.setAlignment(Pos.CENTER);
-        gameBox.setPadding(new Insets(0, 20, 0, 20)); // Add padding to left and right
-
-        mainGameBox = new HBox(25);
-        mainGameBox.setAlignment(Pos.CENTER); // Center the content in HBox
-        mainGameBox.setPadding(new Insets(10)); // Uniform padding
+        gameBox = new VBox(50);
 
         // Button box settings
-        gameButtonBox = new HBox(20, hitButton);
+        gameButtonBox = new HBox(50, hitButton);
         gameButtonBox.setAlignment(Pos.CENTER);
-
-        chatBox.setAlignment(Pos.CENTER);
 
         // If the player is playing against the AI
         if (opponent == null) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
             topTextBox.getChildren().add(remainingPlayer);
-            mainGameBox.getChildren().add(gameBox);
         } // If the current player gets to play first
         else if (firstPlayer.equals(username)) {
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
             topTextBox.getChildren().add(remainingOpponent);
-            mainGameBox.getChildren().addAll(gameBox, chatBox);
         }
         else {
-            currTurn.setText("It's " + opponent + " Turn!");
+            currTurn.setText("It's " + opponent + "'s Turn!");
             gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
-            mainGameBox.getChildren().addAll(gameBox, chatBox);
+        }
+        HBox HHH = new HBox(50,gameBox);
+        if (opponent != null) {
+            HHH.getChildren().add(chatBox);
         }
 
+        HHH.setAlignment(Pos.CENTER);
+        VBox VVV = new VBox(25,topTextBox,HHH);
+        VVV.setAlignment(Pos.CENTER);
+
         // Main border pane settings
-        BorderPane pane = new BorderPane();
-        pane.setPadding(new Insets( 20));
+        BorderPane pane = new BorderPane(VVV);
         pane.setStyle("-fx-background-color: grey");
 
-//        // Set top, center, and right alignment
-//        pane.setTop(topTextBox);
-//        pane.setCenter(gameBox);
-//        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
-//        if (opponent != null) {
-//            pane.setRight(chatBox);
-//        }
+        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
+        VVV.setBackground(new Background(bgImage));
 
-        // Set top and center alignment
-        pane.setTop(topTextBox);
-        BorderPane.setAlignment(topTextBox, Pos.CENTER);
-        pane.setCenter(mainGameBox);
-        BorderPane.setAlignment(mainGameBox, Pos.CENTER);
+        // Set top, center, and right alignment
+        BorderPane.setAlignment(gameButtonBox, Pos.CENTER);
+        if (opponent != null) {
+//            pane.setRight(chatBox);
+        }
 
         // Return the scene
         return new Scene(pane, 900, 700);
