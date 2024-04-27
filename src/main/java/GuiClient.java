@@ -30,7 +30,7 @@ public class GuiClient extends Application{
     private TextField nameTextField, messageField = new TextField();
     private HBox buttonBox, gameButtonBox, middleHBox = new HBox(50);
     ListView<String> chatLog = new ListView<>();
-    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
+    private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField), ZZZ;
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
@@ -91,6 +91,7 @@ public class GuiClient extends Application{
                                     welcomeBox.getChildren().remove(nameTextField);
                                     welcomeBox.getChildren().add(buttonBox);
                                     nameError.setText("");
+                                    t1.setText("");
 
                                 });
                                 pause.play();
@@ -224,6 +225,10 @@ public class GuiClient extends Application{
                                 styleRectangleButton(retryButton);
                                 retryButton.setOnAction(e -> {
                                     primaryStage.setScene(sceneMap.get("welcome"));
+                                    middleHBox.getChildren().clear();
+                                    mainVBox.getChildren().clear();
+                                    orientationBox.getChildren().clear();
+                                    chatBox.getChildren().clear();
                                 });
 
                                 quitButton = new Button("Quit");
@@ -267,7 +272,7 @@ public class GuiClient extends Application{
             }
             currTurn.setText("Its Your Turn!");
             gameBox.getChildren().clear();
-            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            gameBox.getChildren().addAll(enemyBoatPane);
             hitButton.setDisable(false);
         });
 
@@ -434,23 +439,9 @@ public class GuiClient extends Application{
         destroyer = new Button("DESTROYER - 2");
 
         // Length, Count of ship placement
-        carrier.setUserData(5);
-        battleship.setUserData(4);
-        cruiser.setUserData(3);
-        submarine.setUserData(3);
-        destroyer.setUserData(2);
-
-        carrier.setOnAction(e -> selectShip(carrier));
-        battleship.setOnAction(e -> selectShip(battleship));
-        cruiser.setOnAction(e -> selectShip(cruiser));
-        submarine.setOnAction(e -> selectShip(submarine));
-        destroyer.setOnAction(e -> selectShip(destroyer));
-
-        styleRectangleButton(carrier);
-        styleRectangleButton(battleship);
-        styleRectangleButton(cruiser);
-        styleRectangleButton(submarine);
-        styleRectangleButton(destroyer);
+        carrier.setUserData(5);battleship.setUserData(4);cruiser.setUserData(3);submarine.setUserData(3);destroyer.setUserData(2);
+        carrier.setOnAction(e -> selectShip(carrier));battleship.setOnAction(e -> selectShip(battleship));cruiser.setOnAction(e -> selectShip(cruiser));submarine.setOnAction(e -> selectShip(submarine));destroyer.setOnAction(e -> selectShip(destroyer));
+        styleRectangleButton(carrier);styleRectangleButton(battleship);styleRectangleButton(cruiser);styleRectangleButton(submarine);styleRectangleButton(destroyer);
 
         selected = new Text();
         selected.setWrappingWidth(100);
@@ -714,7 +705,8 @@ public class GuiClient extends Application{
         topTextBox.setPadding(new Insets(10, 0, 50, 0));
 
         // Main game box settings
-        gameBox = new VBox(50);
+        gameBox = new VBox();
+        gameBox.setAlignment(Pos.CENTER);
 
         // Button box settings
         gameButtonBox = new HBox(50, hitButton);
@@ -722,16 +714,16 @@ public class GuiClient extends Application{
 
         // If the player is playing against the AI
         if (opponent == null) {
-            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            gameBox.getChildren().addAll(enemyBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
         } // If the current player gets to play first
         else if (firstPlayer.equals(username)) {
-            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            gameBox.getChildren().addAll(enemyBoatPane);
             topTextBox.getChildren().add(remainingOpponent);
         }
         else {
             currTurn.setText("It's " + opponent + "'s Turn!");
-            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            gameBox.getChildren().addAll(enemyBoatPane);
             hitButton.setDisable(true);
 //            gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
@@ -742,7 +734,7 @@ public class GuiClient extends Application{
         }
 
         HHH.setAlignment(Pos.CENTER);
-        VBox VVV = new VBox(25,topTextBox,HHH);
+        VBox VVV = new VBox(25,topTextBox,HHH,gameButtonBox);
         VVV.setAlignment(Pos.CENTER);
 
         // Main border pane settings
