@@ -13,7 +13,6 @@ import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -210,12 +209,12 @@ public class GuiClient extends Application{
                                 break;
                             case "lose_game":
                                 ArrayList<ArrayList<Integer>> loseCell = message.cells;
-//                                Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
-//
-//                                System.out.println("The opponent hit at X: " + loseCell.get(0).get(0));
-//                                System.out.println("The opponent hit at Y: " + loseCell.get(0).get(1));
+                                Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
 
-//                                targetLoseCell.setFill(Color.INDIANRED);
+                                System.out.println("The opponent hit at X: " + loseCell.get(0).get(0));
+                                System.out.println("The opponent hit at Y: " + loseCell.get(0).get(1));
+
+                                targetLoseCell.setFill(Color.INDIANRED);
 
                                 currTurn.setText("You Lost. Try Again?");
                                 currTurn.setStyle("-fx-font-size: 40; -fx-font-weight: bold; -fx-fill: black; -fx-font-family: Arial; ");
@@ -604,8 +603,8 @@ public class GuiClient extends Application{
                 cell.setStroke(Color.BLACK);
                 cell.setFill(Color.TRANSPARENT);
                 cell.setUserData(true);
-                int finalRow = row; // Adjust for zero-based index
-                int finalCol = col; // Adjust for zero-based index
+                int finalRow = row;
+                int finalCol = col;
                 if (pane == enemyBoatPane) {
                     cell.setOnMouseClicked(event -> guessCell(finalRow, finalCol));
                     cell.setOnMouseEntered(mouseEvent -> {
@@ -623,6 +622,89 @@ public class GuiClient extends Application{
                 }
                 else if (pane == playerBoatPane) {
                     cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol));
+                    cell.setOnMouseEntered(mouseEvent -> {
+                        if (selectedShip != null && currentOrientation != null) {
+                            int shipSize = (int) selectedShip.getUserData();
+                            if (currentOrientation.equals("Horizontal")) {
+                                if (finalCol + shipSize <= numColumns+1) {
+                                    boolean x = true;
+                                    for (int i = 0; i < shipSize; i++) {
+                                        Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol + i, finalRow);
+                                        if (!Boolean.TRUE.equals(targetCell.getUserData())) {
+                                            x = false;
+                                            break; // Stop preview if overlap found
+                                        }
+                                    }
+                                    if(x) {
+                                        for (int i = 0; i < shipSize; i++) {
+                                            Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol + i, finalRow);
+                                            targetCell.setFill(Color.LIGHTGREEN);
+
+                                            if (i == 0) {
+                                                addImageToGridPane(boatImages[0], finalCol+i, finalRow);
+                                            }
+                                            else if (i == shipSize - 1) {
+                                                addImageToGridPane(boatImages[2], finalCol+i, finalRow);
+                                            }
+                                            else {
+                                                addImageToGridPane(boatImages[1], finalCol+i, finalRow);
+                                            }
+                                        }
+                                    }
+
+                                    }
+                            } else if (currentOrientation.equals("Vertical")) {
+                                if (finalRow + shipSize <= numRows+1) {
+                                    boolean x = true;
+                                    for (int i = 0; i < shipSize; i++) {
+                                        Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol, finalRow + i);
+                                        if (!Boolean.TRUE.equals(targetCell.getUserData())) {
+                                            x = false;
+                                            break; // Stop preview if overlap found
+                                        }
+                                    }
+                                    if(x) {
+                                        for (int i = 0; i < shipSize; i++) {
+                                            Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol, finalRow+i);
+                                            if (i == 0) {
+                                                addImageToGridPane(boatImages[3], finalCol, finalRow+i);
+                                            }
+                                            else if (i == shipSize - 1) {
+                                                addImageToGridPane(boatImages[5], finalCol, finalRow+i);
+                                            }
+                                            else {
+                                                addImageToGridPane(boatImages[4], finalCol, finalRow+i);
+                                            }
+                                            targetCell.setFill(Color.LIGHTGREEN);
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    cell.setOnMouseExited(mouseEvent -> {
+                        if (selectedShip != null && currentOrientation != null) {
+                            int shipSize = (int) selectedShip.getUserData();
+                            if (currentOrientation.equals("Horizontal") && finalCol + shipSize <= numColumns+1) {
+                                for (int i = 0; i < shipSize; i++) {
+                                    Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol + i, finalRow);
+                                    if (Boolean.TRUE.equals(targetCell.getUserData())) { // Check if cell is free
+                                        targetCell.setFill(Color.TRANSPARENT);
+                                        removeImageFromGridPane(playerBoatPane,finalCol+i,finalRow);
+                                    }
+                                }
+                            } else if (currentOrientation.equals("Vertical") && finalRow + shipSize <= numRows+1) {
+                                for (int i = 0; i < shipSize; i++) {
+                                    Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol, finalRow + i);
+                                    if (Boolean.TRUE.equals(targetCell.getUserData())) { // Check if cell is free
+                                        removeImageFromGridPane(playerBoatPane,finalCol,finalRow+i);
+                                        targetCell.setFill(Color.TRANSPARENT);
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
                 pane.add(cell, col, row); // The grid content starts from (1,1) due to labels
             }
@@ -728,6 +810,9 @@ public class GuiClient extends Application{
 
             for (int i = 0; i < shipSize; i++) {
                 int newCol = col + i;
+
+                Rectangle x = (Rectangle) getNodeFromGridPane(playerBoatPane,newCol, row);
+                x.setFill(Color.TRANSPARENT);
                 if (i == 0) {
                     addImageToGridPane(boatImages[0], newCol, row);
                 }
@@ -767,6 +852,10 @@ public class GuiClient extends Application{
 
             for (int i = 0; i < shipSize; i++) {
                 int newRow = row + i;
+
+                Rectangle x = (Rectangle) getNodeFromGridPane(playerBoatPane,col, newRow);
+                x.setFill(Color.TRANSPARENT);
+
                 if (i == 0) {
                     addImageToGridPane(boatImages[3], col, newRow);
                 }
@@ -843,11 +932,29 @@ public class GuiClient extends Application{
         // Create an ImageView and set the image to it
         ImageView imageView = new ImageView(image);
 
+        imageView.setMouseTransparent(true);
         imageView.setFitHeight(cellSize);
         imageView.setFitWidth(cellSize);
         imageView.setPreserveRatio(true);
 
         // Add the ImageView to the gridpane at the specified column and row
         playerBoatPane.add(imageView, column, row);
+    }
+    private void removeImageFromGridPane(GridPane gridPane, int column, int row) {
+        Node nodeToRemove = null;
+        for (Node node : gridPane.getChildren()) {
+            // Check the node's column and row position
+            if (GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null
+                    && GridPane.getColumnIndex(node) == column && GridPane.getRowIndex(node) == row) {
+                if (node instanceof ImageView) { // Additional check if you only want to remove ImageViews
+                    nodeToRemove = node;
+                    break;
+                }
+            }
+        }
+
+        if (nodeToRemove != null) {
+            gridPane.getChildren().remove(nodeToRemove); // Remove the node from the grid
+        }
     }
 }
