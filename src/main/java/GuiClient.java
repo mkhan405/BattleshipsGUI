@@ -17,6 +17,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.scene.text.Text;
 import javafx.animation.PauseTransition;
@@ -31,26 +32,17 @@ public class GuiClient extends Application{
     private HBox buttonBox, gameButtonBox, middleHBox = new HBox(50);
     ListView<String> chatLog = new ListView<>();
     private VBox welcomeBox, boatSelectBox, orientationBox, mainVBox, topTextBox, gameBox, chatBox = new VBox(10, chatLog, messageField);
-    private Message client = new Message();
-    private ArrayList<Message> messages = new ArrayList<>();
     private HashMap<String, Scene> sceneMap;
     private Client clientConnection;
     private final int numColumns = 10, numRows = 10, cellSize = 30;
     private String currentOrientation = null, username, opponent = null, sessionID = null, firstPlayer, secondPlayer;
     private int remainingBoats = 5, remainingOpponentBoats = 5;
     private Rectangle currChosenCell = null;
+    private ArrayList<Rectangle> abc = new ArrayList<>();
     private PauseTransition playerEndTurnPause, opponentEndTurnPause;
     private ArrayList<ArrayList<Integer>> boatCells;
     private HashMap<String, ArrayList<ArrayList<Integer>>> boatCoordinates = new HashMap<>();
-
-    private String[] boatImages = {
-            "shiphead.png",
-            "shipmiddle.png",
-            "shiptail.png",
-            "shipheadvertical.png",
-            "shipmiddlevertical.png",
-            "shiptailvertical.png"
-    };
+    private String[] boatImages = {"shiphead.png", "shipmiddle.png", "shiptail.png", "shipheadvertical.png", "shipmiddlevertical.png", "shiptailvertical.png"};
 
     public static void main(String[] args) {
         launch(args);
@@ -64,7 +56,6 @@ public class GuiClient extends Application{
 
                         switch (message.type) {
                             case "user_registered":  // New user has joined the server
-//                                messages.add(message);
                                 choose.setText("Play with another player or with the AI");
                                 welcomeBox.getChildren().remove(nameTextField);
                                 welcomeBox.getChildren().add(buttonBox);
@@ -78,10 +69,8 @@ public class GuiClient extends Application{
                                 break;
                             case "start_session":
                                 sessionID = message.content;
-
                                 firstPlayer = sessionID.substring(sessionID.indexOf("p1=") + "p1=".length(), sessionID.indexOf("p2=") - 1);
                                 secondPlayer = sessionID.substring(sessionID.indexOf("p2=") + "p2=".length());
-
                                 sessionID = message.content.split(";")[0];
 
                                 if (firstPlayer.equals(username)) {
@@ -106,7 +95,6 @@ public class GuiClient extends Application{
 
                                 });
                                 pause.play();
-
                                 break;
                             case "indiv_message_ok":
                                 chatLog.getItems().add(message.username + " to you: " + message.content);
@@ -166,6 +154,7 @@ public class GuiClient extends Application{
 
                                             // If no more coordinates, remove the boat
                                             if (coordinates.size() == 0) {
+
                                                 iterator.remove();
                                                 remainingPlayer.setText("Your Remaining Boats: " + (--remainingBoats));
                                                 clientConnection.send(new Message("entire_boat_sunk", sessionID));
@@ -176,7 +165,7 @@ public class GuiClient extends Application{
                                     }
                                 }
 
-                                opponentEndTurnPause = new PauseTransition(Duration.seconds(2));
+                                opponentEndTurnPause = new PauseTransition(Duration.seconds(0.5));
                                 opponentEndTurnEvent();
                                 opponentEndTurnPause.play();
                                 break;
@@ -221,12 +210,12 @@ public class GuiClient extends Application{
                                 break;
                             case "lose_game":
                                 ArrayList<ArrayList<Integer>> loseCell = message.cells;
-                                Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
+//                                Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
+//
+//                                System.out.println("The opponent hit at X: " + loseCell.get(0).get(0));
+//                                System.out.println("The opponent hit at Y: " + loseCell.get(0).get(1));
 
-                                System.out.println("The opponent hit at X: " + loseCell.get(0).get(0));
-                                System.out.println("The opponent hit at Y: " + loseCell.get(0).get(1));
-
-                                targetLoseCell.setFill(Color.INDIANRED);
+//                                targetLoseCell.setFill(Color.INDIANRED);
 
                                 currTurn.setText("You Lose. Try Again?");
                                 remainingPlayer.setText("");
@@ -245,7 +234,7 @@ public class GuiClient extends Application{
                                     System.exit(0);
                                 });
 
-                                gameBox.getChildren().add(gameButtonBox);
+//                                gameBox.getChildren().add(gameButtonBox);
                                 gameButtonBox.getChildren().clear();
                                 gameButtonBox.getChildren().addAll(retryButton, quitButton);
 
@@ -280,7 +269,10 @@ public class GuiClient extends Application{
             currTurn.setText("Its Your Turn!");
             gameBox.getChildren().clear();
             gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            hitButton.setDisable(false);
         });
+
+//        hitButton.setDisable(false);
     }
 
     private void playerEndTurnEvent() {
@@ -294,23 +286,24 @@ public class GuiClient extends Application{
                 currTurn.setText("It's the AI's Turn.");
             }
 
-            gameBox.getChildren().clear();
-            gameBox.getChildren().add(playerBoatPane); // Change Pane after the pause
+            hitButton.setDisable(true);
+
+//            gameBox.getChildren().clear();
+//            gameBox.getChildren().add(playerBoatPane); // Change Pane after the pause
         });
     }
 
     private Scene createWelcomePage() {
-
         welcome = new Text("Welcome to Battleships!");
         welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
-        choose = new Text("Play with another player or with the AI");
+        choose = new Text("Please Enter Your Username");
         choose.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial; ");
 
         nameError = new Text();
         nameError.setStyle(" -fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #8f1212; -fx-font-family: Arial;");
 
-        onlineButton = new Button("Online");
+        onlineButton = new Button("Multiplayer");
         styleButton(onlineButton, "linear-gradient(#448aff, #005ecb)", "linear-gradient(#82b1ff, #447eff)");
 
         botButton = new Button("AI");
@@ -333,6 +326,7 @@ public class GuiClient extends Application{
             }
             else {
                 clientConnection.send(new Message("new_user",nameTextField.getText()));
+                choose.setText("Play with another player or with the AI");
                 username = nameTextField.getText();
                 nameError.setText("");
                 nameTextField.clear();
@@ -362,8 +356,8 @@ public class GuiClient extends Application{
         orientationBox = new VBox(20, selected, requiredBlocks, orientationSelected, verticalButton, horizontalButton);
         orientationBox.setAlignment(Pos.CENTER);
 
-        messageField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-background-radius: 10; -fx-font-family: Arial; -fx-pref-width: 30px;");
-
+        messageField.setStyle("-fx-text-fill: black; -fx-font-size: 16; -fx-font-family: Arial; -fx-pref-width: 30px; -fx-border-color: #000000; -fx-border-radius: 5");
+        messageField.setBackground(Background.EMPTY);
         messageField.setOnAction(e->{
             String content = messageField.getText();
             clientConnection.send(new Message("indiv_messsage", content, username, opponent));
@@ -371,15 +365,8 @@ public class GuiClient extends Application{
             messageField.setText("");
         });
 
-        chatLog.setStyle("-fx-background-insets: 0; " + "-fx-padding: 5; " + "-fx-border-insets: 0; " + "-fx-background-radius: 5; " + "-fx-border-radius: 5; " + "-fx-border-color: #e0e0e0; " + "-fx-border-width: 1; " + "-fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #ffffff, #f2f2f2); " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
-
-        chatLog.addEventFilter(ScrollEvent.SCROLL, event -> {
-            ScrollBar scrollBar = (ScrollBar)chatLog.lookup(".scroll-bar");
-            if (scrollBar != null) {
-                scrollBar.setStyle("-fx-background-color: transparent; " + "-fx-background-radius: 5; " + "-fx-background-insets: 0, 0, 1, 2; " + "-fx-padding: 0.833333em; " + "-fx-background-color: #e0e0e0; " + "-fx-background-insets: 0; " + "-fx-background-radius: 4; " + "-fx-background-color: #e0e0e0; " + "-fx-background-radius: 4; ");
-            }
-        });
-
+        chatLog.setStyle("-fx-border-color: #000000; -fx-border-width: 1; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
+        chatLog.setBackground(Background.EMPTY);
         chatLog.setCellFactory(lv -> new ListCell<String>() {
             @Override
             public void updateItem(String item, boolean empty) {
@@ -389,15 +376,9 @@ public class GuiClient extends Application{
                     setGraphic(null);
                 } else {
                     setText(item);
-                    // Customize text fill, font, etc.
-                    setStyle(
-                            "-fx-text-fill: #333333; " +
-                                    "-fx-font-weight: bold; " +
-                                    "-fx-padding: 10; " +
-                                    "-fx-border-color: #e0e0e0; " +
-                                    "-fx-border-width: 0 0 1 0; "
-                    );
+                    setStyle("-fx-text-fill: #333333; " + "-fx-font-weight: bold; -fx-font-size: 12px; "  + "-fx-border-color: #000000; " + "-fx-border-width: 0 0 1 0; -fx-border-radius: 5");
                 }
+                setBackground(Background.EMPTY);
             }
         });
 
@@ -412,7 +393,7 @@ public class GuiClient extends Application{
         mainVBox = new VBox(75, prompt, middleHBox, error);
         mainVBox.setAlignment(Pos.CENTER);
 
-        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        Image backgroundImage = new Image("bg3.jpeg", 900, 700, false, true);
         BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
         mainVBox.setBackground(new Background(bgImage));
 
@@ -468,8 +449,14 @@ public class GuiClient extends Application{
         styleRectangleButton(destroyer);
 
         selected = new Text();
+        selected.setWrappingWidth(100);
+        selected.setTextAlignment(TextAlignment.CENTER);
         requiredBlocks = new Text();
+        requiredBlocks.setWrappingWidth(100);
+        requiredBlocks.setTextAlignment(TextAlignment.CENTER);
         orientationSelected = new Text("Select Orientation");
+        orientationSelected.setWrappingWidth(100);
+        orientationSelected.setTextAlignment(TextAlignment.CENTER);
         error = new Text("");
 
         selected.setStyle("-fx-font-size: 16; -fx-font-weight: normal; -fx-fill: black; -fx-font-family: Arial; ");
@@ -595,6 +582,18 @@ public class GuiClient extends Application{
                 int finalCol = col; // Adjust for zero-based index
                 if (pane == enemyBoatPane) {
                     cell.setOnMouseClicked(event -> guessCell(finalRow, finalCol));
+                    cell.setOnMouseEntered(mouseEvent -> {
+                        if(!cell.getFill().equals(Color.DARKGRAY)) {
+                            cell.setStroke(Color.BLACK);
+                            cell.setFill(Color.YELLOW);
+                        }
+                    });
+                    cell.setOnMouseExited(mouseEvent -> {
+                        if(!cell.getFill().equals(Color.DARKGRAY) ) {
+                            cell.setStroke(Color.BLACK);
+                            cell.setFill(Color.TRANSPARENT);
+                        }
+                    });
                 }
                 else if (pane == playerBoatPane) {
                     cell.setOnMouseClicked(event -> placeShip(finalRow, finalCol));
@@ -636,10 +635,12 @@ public class GuiClient extends Application{
         }
         else {
             currTurn.setText("It's " + opponent + "'s Turn!");
-            gameBox.getChildren().add(playerBoatPane);
+            gameBox.getChildren().addAll(enemyBoatPane, gameButtonBox);
+            hitButton.setDisable(true);
+//            gameBox.getChildren().add(playerBoatPane);
             topTextBox.getChildren().add(remainingPlayer);
         }
-        HBox HHH = new HBox(50,gameBox);
+        HBox HHH = new HBox(50,playerBoatPane,gameBox);
         if (opponent != null) {
             HHH.getChildren().add(chatBox);
         }
@@ -652,7 +653,7 @@ public class GuiClient extends Application{
         BorderPane pane = new BorderPane(VVV);
         pane.setStyle("-fx-background-color: grey");
 
-        Image backgroundImage = new Image("bg2.png", 900, 700, false, true);
+        Image backgroundImage = new Image("bg3.jpeg", 900, 700, false, true);
         BackgroundImage bgImage = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true));
         VVV.setBackground(new Background(bgImage));
 
@@ -805,7 +806,7 @@ public class GuiClient extends Application{
         button.setEffect(new DropShadow(10, Color.BLACK));
 
         // Hover effect
-        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + hoverColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 110px; " + "-fx-pref-height: 35px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
+        button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + hoverColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 110px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
         button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + baseColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 100px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
 
