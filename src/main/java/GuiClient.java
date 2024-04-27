@@ -23,7 +23,7 @@ import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
 public class GuiClient extends Application{
-    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent;
+    private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent, chatText;
     private Button onlineButton, botButton, verticalButton, horizontalButton, confirmButton, hitButton, retryButton, quitButton;
     private Button battleship, cruiser, submarine, carrier, destroyer, selectedShip = null;
     private GridPane playerBoatPane, enemyBoatPane;
@@ -364,7 +364,7 @@ public class GuiClient extends Application{
             messageField.setText("");
         });
 
-        chatLog.setStyle("-fx-border-color: #000000; -fx-border-width: 1; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
+        chatLog.setStyle("-fx-border-color: #000000; -fx-border-width: 1; -fx-max-height: 300; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); ");
         chatLog.setBackground(Background.EMPTY);
         chatLog.setCellFactory(lv -> new ListCell<String>() {
             @Override
@@ -380,6 +380,11 @@ public class GuiClient extends Application{
                 setBackground(Background.EMPTY);
             }
         });
+
+        chatText = new Text("CHAT");
+        chatText.setStyle("-fx-fill: #161085; -fx-font-size: 20px; -fx-font-weight: bold; -fx-font-family: Arial");
+        chatBox.getChildren().add(0,chatText);
+        chatBox.setAlignment(Pos.CENTER);
 
         middleHBox.getChildren().add(playerBoatPane);
         middleHBox.getChildren().add(boatSelectBox);
@@ -605,8 +610,9 @@ public class GuiClient extends Application{
                                     for (int i = 0; i < shipSize; i++) {
                                         Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol + i, finalRow);
                                         if (!Boolean.TRUE.equals(targetCell.getUserData())) {
+                                            targetCell.setFill(Color.RED);
                                             x = false;
-                                            break; // Stop preview if overlap found
+//                                            break; // Stop preview if overlap found
                                         }
                                     }
                                     if(x) {
@@ -633,9 +639,11 @@ public class GuiClient extends Application{
                                     for (int i = 0; i < shipSize; i++) {
                                         Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol, finalRow + i);
                                         if (!Boolean.TRUE.equals(targetCell.getUserData())) {
+                                            targetCell.setFill(Color.RED);
                                             x = false;
-                                            break; // Stop preview if overlap found
+//                                            break; // Stop preview if overlap found
                                         }
+
                                     }
                                     if(x) {
                                         for (int i = 0; i < shipSize; i++) {
@@ -667,12 +675,18 @@ public class GuiClient extends Application{
                                         targetCell.setFill(Color.TRANSPARENT);
                                         removeImageFromGridPane(playerBoatPane,finalCol+i,finalRow);
                                     }
+                                    else{
+                                        targetCell.setFill(Color.TRANSPARENT);
+                                    }
                                 }
                             } else if (currentOrientation.equals("Vertical") && finalRow + shipSize <= numRows+1) {
                                 for (int i = 0; i < shipSize; i++) {
                                     Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, finalCol, finalRow + i);
                                     if (Boolean.TRUE.equals(targetCell.getUserData())) { // Check if cell is free
                                         removeImageFromGridPane(playerBoatPane,finalCol,finalRow+i);
+                                        targetCell.setFill(Color.TRANSPARENT);
+                                    }
+                                    else{
                                         targetCell.setFill(Color.TRANSPARENT);
                                     }
                                 }
@@ -775,7 +789,7 @@ public class GuiClient extends Application{
             for (int i = 0; i < shipSize; i++) {
                 Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, col + i, row);
                 if(targetCell.getUserData().equals(false)) {
-                    error.setText("Merge with another ship");
+                    error.setText("Too close to another ship");
                     return;
                 }
             }
@@ -784,7 +798,6 @@ public class GuiClient extends Application{
 
             for (int i = 0; i < shipSize; i++) {
                 int newCol = col + i;
-
                 Rectangle x = (Rectangle) getNodeFromGridPane(playerBoatPane,newCol, row);
                 x.setFill(Color.TRANSPARENT);
                 if (i == 0) {
@@ -797,6 +810,18 @@ public class GuiClient extends Application{
                     addImageToGridPane(boatImages[1], newCol, row);
                 }
                 getNodeFromGridPane(playerBoatPane, newCol, row).setUserData(false);
+                if(newCol + 1 < numColumns+1)  {
+
+
+                    getNodeFromGridPane(playerBoatPane, newCol+1, row).setUserData(false);
+                }
+
+                if(row + 1 < numRows+1) {
+                    getNodeFromGridPane(playerBoatPane, newCol, row+1).setUserData(false);
+                }
+                getNodeFromGridPane(playerBoatPane, newCol, row-1).setUserData(false);
+                getNodeFromGridPane(playerBoatPane, newCol-1, row).setUserData(false);
+
 
                 ArrayList<Integer> newBoatCells = new ArrayList<>();
                 newBoatCells.add(newCol);
@@ -817,7 +842,7 @@ public class GuiClient extends Application{
             for (int i = 0; i < shipSize; i++) {
                 Rectangle targetCell = (Rectangle) getNodeFromGridPane(playerBoatPane, col, row + i);
                 if(targetCell.getUserData().equals(false)) {
-                    error.setText("Merge with another ship");
+                    error.setText("Too close to another ship");
                     return;
                 }
             }
@@ -840,6 +865,16 @@ public class GuiClient extends Application{
                     addImageToGridPane(boatImages[4], col, newRow);
                 }
                 getNodeFromGridPane(playerBoatPane, col, newRow).setUserData(false);
+                if(col + 1 < numColumns+1) {
+                    getNodeFromGridPane(playerBoatPane, col+1, newRow).setUserData(false);
+                }
+
+                if(newRow + 1 < numRows+1) {
+                    getNodeFromGridPane(playerBoatPane, col, newRow+1).setUserData(false);
+                }
+                getNodeFromGridPane(playerBoatPane, col-1, newRow).setUserData(false);
+                getNodeFromGridPane(playerBoatPane, col, newRow-1).setUserData(false);
+
 
                 ArrayList<Integer> newBoatCells = new ArrayList<>();
                 newBoatCells.add(col);
@@ -879,7 +914,6 @@ public class GuiClient extends Application{
         }
         return null;
     }
-
     private void styleRectangleButton(Button button){
 
         button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 120px; " + "-fx-pref-height: 40px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20;");
@@ -889,7 +923,6 @@ public class GuiClient extends Application{
         button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#a2a4a6, #bbbdbf)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 125px; " + "-fx-pref-height: 45px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
         button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 14px; " + "-fx-background-color: " + "linear-gradient(#73777d, #959aa1)" + "; " + "-fx-text-fill: black; " + "-fx-pref-width: 120px; " + "-fx-pref-height: 40px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
-
     private void styleButton(Button button, String baseColor, String hoverColor) {
         button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + baseColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 100px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20;");
         button.setEffect(new DropShadow(10, Color.BLACK));
@@ -898,7 +931,6 @@ public class GuiClient extends Application{
         button.setOnMouseEntered(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + hoverColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 110px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0, 0, 0);"));
         button.setOnMouseExited(e -> button.setStyle("-fx-font-size: 15px; " + "-fx-background-color: " + baseColor + "; " + "-fx-text-fill: white; " + "-fx-pref-width: 100px; " + "-fx-pref-height: 20px; " + "-fx-border-radius: 20; " + "-fx-background-radius: 20; " + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 10, 0, 0, 0);"));
     }
-
     private void addImageToGridPane(String imagePath, int column, int row) {
         // Create an image object
         Image image = new Image(imagePath);
