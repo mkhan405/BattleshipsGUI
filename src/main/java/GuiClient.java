@@ -200,7 +200,14 @@ public class GuiClient extends Application{
                                 currChosenCell.setFill(Color.ORANGE);
                                 currChosenCell.setDisable(true);
 
-                                currTurn.setText("You Won!");
+                                PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1));
+
+                                pauseTransition.setOnFinished(event -> {
+                                    currTurn.setText("Its Your Turn!");
+                                });
+
+                                pauseTransition.play();
+
                                 remainingPlayer.setText("");
                                 remainingOpponent.setText("");
 
@@ -223,6 +230,7 @@ public class GuiClient extends Application{
 
                                 break;
                             case "lose_game":
+                                PauseTransition transition = new PauseTransition(Duration.seconds(1));
                                 ArrayList<ArrayList<Integer>> loseCell = message.cells;
                                 Rectangle targetLoseCell = (Rectangle) getNodeFromGridPane(playerBoatPane, loseCell.get(0).get(0), loseCell.get(0).get(1));
 
@@ -231,7 +239,11 @@ public class GuiClient extends Application{
 
                                 targetLoseCell.setFill(Color.INDIANRED);
 
-                                currTurn.setText("You Lose. Try Again?");
+                                transition.setOnFinished(event -> {
+                                    currTurn.setText("You Lose. Try Again?");
+                                });
+
+                                transition.play();
                                 remainingPlayer.setText("");
                                 remainingOpponent.setText("");
 
