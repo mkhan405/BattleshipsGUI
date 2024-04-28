@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
+            <version>12</version>
             <scope>compile</scope>
         </dependency>
 
@@ -37,7 +37,17 @@
             <version>12</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>12</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>12</version>
+        </dependency>
 
     </dependencies>
 

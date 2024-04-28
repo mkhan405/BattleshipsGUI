@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +23,9 @@ import javafx.scene.text.Text;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
 
 public class GuiClient extends Application{
     private Text welcome, choose, nameError, prompt, remaining, selected, requiredBlocks, orientationSelected, error, currTurn, remainingPlayer, remainingOpponent, chatText = new Text("CHAT");
@@ -45,6 +49,13 @@ public class GuiClient extends Application{
     private ProgressIndicator loadingIndicator = new ProgressIndicator();
     private String[] boatImages = {"shiphead.png", "shipmiddle.png", "shiptail.png", "shipheadvertical.png", "shipmiddlevertical.png", "shiptailvertical.png"};
 
+    String welcomeSong = "src/main/resources/homepagemusic.mp3";
+    Media welcomeSound = new Media(new File(welcomeSong).toURI().toString());
+    MediaPlayer welcomeSoundPlayer = new MediaPlayer(welcomeSound);
+
+    String gameplayMusic = "src/main/resources/BlackPearl.mp3";
+    Media gamePlaySound = new Media(new File(gameplayMusic).toURI().toString());
+    MediaPlayer gamePlaySoundPlayer = new MediaPlayer(gamePlaySound);
     public static void main(String[] args) {
         launch(args);
     }
@@ -328,6 +339,7 @@ public class GuiClient extends Application{
     }
 
     private Scene createWelcomePage() {
+        welcomeSoundPlayer.play();
         welcome = new Text("Welcome to Battleships!");
         welcome.setStyle("-fx-font-size: 45; -fx-font-weight: bold; -fx-fill: white; -fx-font-family: Arial;");
 
@@ -730,6 +742,12 @@ public class GuiClient extends Application{
     }
 
     private Scene createGamePlayScene() {
+        welcomeSoundPlayer.stop();
+        gamePlaySoundPlayer.play();
+        gamePlaySoundPlayer.setOnEndOfMedia(() -> {
+            gamePlaySoundPlayer.seek(gamePlaySoundPlayer.getStartTime()); // Rewind to the beginning
+            gamePlaySoundPlayer.play(); // Play again
+        });
         // Top text box settings
         topTextBox = new VBox(15, currTurn);
         topTextBox.setAlignment(Pos.CENTER);
